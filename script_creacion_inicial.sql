@@ -262,8 +262,7 @@ GO
 	CREATE TABLE AJO_DER.freno (
 		id INT NOT NULL IDENTITY PRIMARY KEY,
 		id_auto INT, -- FK
-		numero_serie NVARCHAR(255),
-		tamanio_disco DECIMAL(18,2)
+		numero_serie NVARCHAR(255)
 	);
 
 	CREATE TABLE AJO_DER.neumatico (
@@ -379,7 +378,8 @@ GO
 		id_freno INT, -- FK
 		id_posicion INT, -- FK
 		grosor_pastilla DECIMAL(18,2),
-		temperatura DECIMAL(18,2),
+		tamanio_disco DECIMAL(18,2),
+		temperatura DECIMAL(18,2)
 	);
 
 	CREATE TABLE AJO_DER.estado_neumatico (
@@ -1118,6 +1118,7 @@ BEGIN
 	EXEC AJO_DER.migrar_estado_de_motor;
 	EXEC AJO_DER.migrar_caja_de_cambios;
 	EXEC AJO_DER.migrar_estado_de_caja_de_cambios;
+	EXEC AJO_DER.migrar_posiciones
 	EXEC AJO_DER.migrar_frenos;
 	EXEC AJO_DER.migrar_estado_de_freno_1;
 	EXEC AJO_DER.migrar_estado_de_freno_2;
