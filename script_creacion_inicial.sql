@@ -61,6 +61,7 @@ GO
 
 
 
+
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'posicion')
 		DROP TABLE AJO_DER.posicion
 
