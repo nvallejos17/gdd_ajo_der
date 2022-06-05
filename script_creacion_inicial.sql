@@ -202,194 +202,195 @@ CREATE SCHEMA AJO_DER
 GO
 
 -- Creacion de tablas
-  CREATE TABLE AJO_DER.parada_box (
-    id INT NOT NULL IDENTITY PRIMARY KEY,
-    id_carrera INT, -- FK
-    id_auto INT, -- FK
-    numero_vuelta DECIMAL(18,0),
-    tiempo_parada DECIMAL(18,2)
-  );
+	CREATE TABLE AJO_DER.parada_box (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		id_carrera INT, -- FK
+		id_auto INT, -- FK
+		numero_vuelta DECIMAL(18,0),
+		tiempo_parada DECIMAL(18,2)
+	);
 
-  CREATE TABLE AJO_DER.cambio_neumaticos (
-      id INT NOT NULL IDENTITY PRIMARY KEY,
-    id_parada_box INT, -- FK
-      id_neumatico_anterior INT, -- FK
-      id_neumatico_nuevo INT, -- FK
-    id_posicion INT -- FK
-  );
+	CREATE TABLE AJO_DER.cambio_neumaticos (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		id_parada_box INT, -- FK
+		id_neumatico_anterior INT, -- FK
+		id_neumatico_nuevo INT, -- FK
+		id_posicion INT -- FK
+	);
 
-  CREATE TABLE AJO_DER.auto (
-      id INT NOT NULL IDENTITY PRIMARY KEY,
-      id_escuderia INT, -- FK
-      id_piloto INT, -- FK
-      numero_auto INT,
-    modelo VARCHAR(255)
-  );
+	CREATE TABLE AJO_DER.auto (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		id_escuderia INT, -- FK
+		id_piloto INT, -- FK
+		numero_auto INT,
+		modelo NVARCHAR(255)
+	);
 
-  CREATE TABLE AJO_DER.posicion (
-    id INT NOT NULL IDENTITY PRIMARY KEY,
-    descripcion VARCHAR(255)
-  );
+	CREATE TABLE AJO_DER.posicion (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		descripcion NVARCHAR(255)
+	);
 
-  CREATE TABLE AJO_DER.escuderia (
-      id INT NOT NULL IDENTITY PRIMARY KEY,
-      nombre VARCHAR(255),
-      id_nacionalidad INT -- FK
-  );
+	CREATE TABLE AJO_DER.escuderia (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		nombre NVARCHAR(255),
+		id_nacionalidad INT -- FK
+	);
 
-  CREATE TABLE AJO_DER.piloto (
-      id INT NOT NULL IDENTITY PRIMARY KEY,
-      id_nacionalidad INT, -- FK
-      nombre VARCHAR(50),
-    apellido VARCHAR(50),
-    fecha_nacimiento DATE
-  );
+	CREATE TABLE AJO_DER.piloto (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		id_nacionalidad INT, -- FK
+		nombre NVARCHAR(50),
+		apellido NVARCHAR(50),
+		fecha_nacimiento DATE
+	);
 
-  CREATE TABLE AJO_DER.motor (
-      id INT NOT NULL IDENTITY PRIMARY KEY,
-    id_auto INT, -- FK
-    modelo NVARCHAR(255),
-    numero_serie NVARCHAR(255)
-  );
+	CREATE TABLE AJO_DER.motor (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		id_auto INT, -- FK
+		modelo NVARCHAR(255),
+		numero_serie NVARCHAR(255)
+	);
 
-  CREATE TABLE AJO_DER.caja_de_cambios (
-    id INT NOT NULL IDENTITY PRIMARY KEY,
-    id_auto INT, -- FK
-    modelo NVARCHAR(255),
-    numero_serie NVARCHAR(255)
-  );
+	CREATE TABLE AJO_DER.caja_de_cambios (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		id_auto INT, -- FK
+		modelo NVARCHAR(50),
+		numero_serie NVARCHAR(255)
+	);
 
-  CREATE TABLE AJO_DER.freno (
-    id INT NOT NULL IDENTITY PRIMARY KEY,
-    id_auto INT, -- FK
-    numero_serie NVARCHAR(255)
-  );
+	CREATE TABLE AJO_DER.freno (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		id_auto INT, -- FK
+		numero_serie NVARCHAR(255),
+		tamanio_disco DECIMAL(18,2)
+	);
 
-  CREATE TABLE AJO_DER.neumatico (
-      id INT NOT NULL IDENTITY PRIMARY KEY,
-    id_auto INT, -- FK
-    id_tipo_neumatico INT, -- FK
-    numero_serie NVARCHAR(255)
-  );
+	CREATE TABLE AJO_DER.neumatico (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		id_auto INT, -- FK
+		id_tipo_neumatico INT, -- FK
+		numero_serie NVARCHAR(255)
+	);
 
-  CREATE TABLE AJO_DER.tipo_neumatico (
-    id INT NOT NULL IDENTITY PRIMARY KEY,
-    tipo VARCHAR(255)
-  );
+	CREATE TABLE AJO_DER.tipo_neumatico (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		tipo NVARCHAR(255)
+	);
 
-  CREATE TABLE AJO_DER.estado_de_motor (
-      id INT NOT NULL IDENTITY PRIMARY KEY,
-    id_medicion INT, -- FK
-    id_motor INT, -- FK
-    potencia DECIMAL(18,6),
-    temperatura_aceite DECIMAL(18,6),
-    temperatura_agua DECIMAL(18,6),
-    rpm INT
-  );
+	CREATE TABLE AJO_DER.estado_de_motor (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		id_medicion INT, -- FK
+		id_motor INT, -- FK
+		potencia DECIMAL(18,6),
+		temperatura_aceite DECIMAL(18,6),
+		temperatura_agua DECIMAL(18,6),
+		rpm DECIMAL(18,6)
+	);
 
-  CREATE TABLE AJO_DER.estado_de_caja_de_cambios (
-      id INT NOT NULL IDENTITY PRIMARY KEY,
-    id_medicion INT, -- FK
-    id_caja_de_cambios INT, -- FK
-    temperatura_aceite DECIMAL(18,2),
-    rpm INT,
-    desgaste DECIMAL(18,2)
-  );
+	CREATE TABLE AJO_DER.estado_de_caja_de_cambios (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		id_medicion INT, -- FK
+		id_caja_de_cambios INT, -- FK
+		temperatura_aceite DECIMAL(18,2),
+		rpm DECIMAL(18,2),
+		desgaste DECIMAL(18,2)
+	);
 
-  CREATE TABLE AJO_DER.bandera (
-    id INT NOT NULL IDENTITY PRIMARY KEY,
-    color VARCHAR(255)
-  );
+	CREATE TABLE AJO_DER.bandera (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		color NVARCHAR(255)
+	);
 
-  CREATE TABLE AJO_DER.tipo_incidente (
-    id INT NOT NULL IDENTITY PRIMARY KEY,
-    tipo VARCHAR(255)
-  );
+	CREATE TABLE AJO_DER.tipo_incidente (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		tipo NVARCHAR(255)
+	);
 
-  CREATE TABLE AJO_DER.incidente (
-    id INT NOT NULL IDENTITY PRIMARY KEY,
-    id_carrera INT, -- FK
-    id_sector INT, -- FK
-    id_bandera INT, -- FK
-    tiempo DECIMAL(18,2),
-  );
+	CREATE TABLE AJO_DER.incidente (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		id_carrera INT, -- FK
+		id_sector INT, -- FK
+		id_bandera INT, -- FK
+		tiempo DECIMAL(18,2),
+	);
 
-  CREATE TABLE AJO_DER.incidente_auto (
-	id INT NOT NULL IDENTITY PRIMARY KEY,
-    id_incidente INT, -- FK
-    id_auto INT, -- FK
-    id_tipo_incidente INT, -- FK
-    numero_vuelta DECIMAL(18,0)
-  );
+	CREATE TABLE AJO_DER.incidente_auto (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		id_incidente INT, -- FK
+		id_auto INT, -- FK
+		id_tipo_incidente INT, -- FK
+		numero_vuelta DECIMAL(18,0)
+	);
 
-  CREATE TABLE AJO_DER.sector (
-    id INT NOT NULL IDENTITY PRIMARY KEY,
-    id_circuito INT, -- FK
-    id_tipo_sector INT, -- FK
-    distancia DECIMAL(18,2),
-    codigo INT
-  );
+	CREATE TABLE AJO_DER.sector (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		id_circuito INT, -- FK
+		id_tipo_sector INT, -- FK
+		distancia DECIMAL(18,2),
+		codigo INT
+	);
 
-  CREATE TABLE AJO_DER.tipo_sector (
-    id INT NOT NULL IDENTITY PRIMARY KEY,
-    tipo VARCHAR(255)
-  );
+	CREATE TABLE AJO_DER.tipo_sector (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		tipo NVARCHAR(255)
+	);
 
-  CREATE TABLE AJO_DER.pais (
-    id INT NOT NULL IDENTITY PRIMARY KEY,
-    nombre VARCHAR(255)
-  );
+	CREATE TABLE AJO_DER.pais (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		nombre NVARCHAR(255)
+	);
 
-  CREATE TABLE AJO_DER.circuito (
-    id INT NOT NULL IDENTITY PRIMARY KEY,
-    id_pais INT, -- FK
-    codigo INT,
-    nombre VARCHAR(255)
-  );
+	CREATE TABLE AJO_DER.circuito (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		id_pais INT, -- FK
+		codigo INT,
+		nombre NVARCHAR(255)
+	);
 
-  CREATE TABLE AJO_DER.medicion (
-    id INT NOT NULL IDENTITY PRIMARY KEY,
-    id_auto INT, -- FK
-    id_carrera INT, -- FK
-    id_sector INT, -- FK
-    nro_vuelta DECIMAL(18,0),
-    distancia_carrera DECIMAL(18,6),
-    distancia_vuelta DECIMAL(18,2),
-    tiempo_vuelta DECIMAL(18,10),
-    posicion DECIMAL(18,0),
-    velocidad DECIMAL(18,2),
-    cant_combustible DECIMAL(18,2)
-  );
+	CREATE TABLE AJO_DER.medicion (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		id_auto INT, -- FK
+		id_carrera INT, -- FK
+		id_sector INT, -- FK
+		codigo_medicion DECIMAL(18,0),
+		nro_vuelta DECIMAL(18,0),
+		distancia_carrera DECIMAL(18,6),
+		distancia_vuelta DECIMAL(18,2),
+		tiempo_vuelta DECIMAL(18,10),
+		posicion DECIMAL(18,0),
+		velocidad DECIMAL(18,2),
+		cant_combustible DECIMAL(18,2)
+	);
 
-  CREATE TABLE AJO_DER.carrera (
-    id INT NOT NULL IDENTITY PRIMARY KEY,
-    id_circuito INT, -- FK
-    cant_vueltas INT,
-    fecha DATE,
-    codigo INT,
-    clima VARCHAR(100),
-    total_carrera DECIMAL(18,2)
-  );
+	CREATE TABLE AJO_DER.carrera (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		id_circuito INT, -- FK
+		cant_vueltas INT,
+		fecha DATE,
+		codigo INT,
+		clima NVARCHAR(100),
+		total_carrera DECIMAL(18,2)
+	);
 
-  CREATE TABLE AJO_DER.estado_freno (
-    id INT NOT NULL IDENTITY PRIMARY KEY,
-    id_medicion INT, -- FK
-    id_freno INT, -- FK
-    id_posicion INT, -- FK
-    grosor_pastilla DECIMAL(18,2),
-    temperatura DECIMAL(18,2),
-	tamanio_disco DECIMAL(18,2)
-  );
+	CREATE TABLE AJO_DER.estado_freno (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		id_medicion INT, -- FK
+		id_freno INT, -- FK
+		id_posicion INT, -- FK
+		grosor_pastilla DECIMAL(18,2),
+		temperatura DECIMAL(18,2),
+	);
 
-  CREATE TABLE AJO_DER.estado_neumatico (
-    id INT NOT NULL IDENTITY PRIMARY KEY,
-    id_medicion INT, -- FK
-    id_neumatico INT, -- FK
-    id_posicion INT, -- FK
-    profundidad DECIMAL(18,6),
-    presion DECIMAL(18,6),
-    temperatura DECIMAL(18,6)
-  );
+	CREATE TABLE AJO_DER.estado_neumatico (
+		id INT NOT NULL IDENTITY PRIMARY KEY,
+		id_medicion INT, -- FK
+		id_neumatico INT, -- FK
+		id_posicion INT, -- FK
+		profundidad DECIMAL(18,6),
+		presion DECIMAL(18,6),
+		temperatura DECIMAL(18,6)
+	);
 
 
 	-- FKs de parada_box
