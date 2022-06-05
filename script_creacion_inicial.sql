@@ -200,7 +200,7 @@ GO
       id_escuderia INT, -- FK
       id_piloto INT, -- FK
       numero_auto INT,
-    modelo VARCHAR(10)
+    modelo VARCHAR(255)
   );
 
   CREATE TABLE AJO_DER.posicion (
@@ -210,16 +210,16 @@ GO
 
   CREATE TABLE AJO_DER.escuderia (
       id INT NOT NULL IDENTITY PRIMARY KEY,
-      nombre VARCHAR(10),
+      nombre VARCHAR(255),
       id_nacionalidad INT -- FK
   );
 
   CREATE TABLE AJO_DER.piloto (
       id INT NOT NULL IDENTITY PRIMARY KEY,
       id_nacionalidad INT, -- FK
-      nombre VARCHAR(10),
-    apellido VARCHAR(10),
-    fecha_nacimiento DATETIME
+      nombre VARCHAR(50),
+    apellido VARCHAR(50),
+    fecha_nacimiento DATE
   );
 
   CREATE TABLE AJO_DER.motor (
@@ -251,7 +251,7 @@ GO
 
   CREATE TABLE AJO_DER.tipo_neumatico (
       id INT NOT NULL IDENTITY PRIMARY KEY,
-    tipo VARCHAR(10)
+    tipo VARCHAR(255)
   );
 
   CREATE TABLE AJO_DER.estado_de_motor (
@@ -276,12 +276,12 @@ GO
 
   CREATE TABLE AJO_DER.bandera (
     id INT NOT NULL IDENTITY PRIMARY KEY,
-    color VARCHAR
+    color VARCHAR(255)
   );
 
   CREATE TABLE AJO_DER.tipo_incidente (
     id INT NOT NULL IDENTITY PRIMARY KEY,
-    tipo VARCHAR
+    tipo VARCHAR(255)
   );
 
   CREATE TABLE AJO_DER.incidente (
@@ -297,7 +297,7 @@ GO
     id_incidente INT, -- FK
     id_auto INT, -- FK
     id_tipo_incidente INT, -- FK
-    numero_vuelta INT
+    numero_vuelta DECIMAL(18,0)
   );
 
   CREATE TABLE AJO_DER.sector (
@@ -500,7 +500,7 @@ GO
 CREATE PROCEDURE AJO_DER.migrar_tipo_incidente
 AS
 	BEGIN
-		INSERT INTO tipo_incidente 
+		INSERT INTO AJO_DER.tipo_incidente 
 		SELECT DISTINCT INCIDENTE_TIPO
 		FROM GD1C2022.gd_esquema.Maestra
 		WHERE INCIDENTE_TIPO IS NOT NULL
@@ -510,7 +510,7 @@ GO
 CREATE PROCEDURE AJO_DER.migrar_bandera
 AS
 	BEGIN
-		INSERT INTO bandera 
+		INSERT INTO AJO_DER.bandera 
 		SELECT DISTINCT INCIDENTE_BANDERA
 		FROM GD1C2022.gd_esquema.Maestra
 		WHERE INCIDENTE_BANDERA IS NOT NULL
@@ -520,7 +520,7 @@ GO
 CREATE PROCEDURE AJO_DER.migrar_escuderia
 AS
 	BEGIN
-		INSERT INTO escuderia
+		INSERT INTO AJO_DER.escuderia
 		SELECT DISTINCT ESCUDERIA_NOMBRE, pais.id
 		FROM GD1C2022.gd_esquema.Maestra
 		JOIN pais ON upper(ESCUDERIA_NACIONALIDAD) = pais.nombre
@@ -531,10 +531,10 @@ GO
 CREATE PROCEDURE AJO_DER.migrar_piloto
 AS
 	BEGIN
-		INSERT INTO piloto
-		SELECT DISTINCT PILOTO_NOMBRE, PILOTO_APELLIDO, pais.id, PILOTO_FECHA_NACIMIENTO
+		INSERT INTO AJO_DER.piloto
+		SELECT DISTINCT AJO_DER.pais.id, PILOTO_NOMBRE, PILOTO_APELLIDO, PILOTO_FECHA_NACIMIENTO
 		FROM GD1C2022.gd_esquema.Maestra
-		JOIN pais ON PILOTO_NACIONALIDAD = pais.nombre
+		JOIN AJO_DER.pais ON PILOTO_NACIONALIDAD = AJO_DER.pais.nombre
 		WHERE PILOTO_NOMBRE IS NOT NULL
 	END
 GO
