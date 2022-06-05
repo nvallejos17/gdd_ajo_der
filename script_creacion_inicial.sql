@@ -85,6 +85,37 @@ BEGIN
 
 	IF OBJECT_ID('AJO_DER.[nacionalidad]','U') IS NOT NULL
 		DROP TABLE AJO_DER.[nacionalidad]
+
+	DROP PROCEDURE IF EXISTS AJO_DER.borar_procedures
+	
+END
+GO
+
+CREATE PROCEDURE borar_procedures
+AS
+BEGIN
+	
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_tipo_sector
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_pais
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_circuito
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_sector
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_carrera
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_medicion
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_parada_box
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_motores
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_estado_de_motor
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_caja_de_cambios
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_estado_de_caja_de_cambios
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_frenos
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_estado_de_freno_1
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_estado_de_freno_2
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_estado_de_freno_3
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_estado_de_freno_4
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_tipo_neumatico
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_neumaticos_1
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_neumaticos_2
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_neumaticos_3
+	DROP PROCEDURE IF EXISTS AJO_DER.migrar_neumaticos_4
 END
 GO
 
@@ -151,23 +182,29 @@ CREATE TABLE AJO_DER.nacionalidad (
 
 CREATE TABLE AJO_DER.motor (
     id INT NOT NULL IDENTITY PRIMARY KEY,
-	id_auto INT -- FK
+	id_auto INT, -- FK
+	modelo NVARCHAR(255),
+	numero_serie NVARCHAR(255)
 );
 
 CREATE TABLE AJO_DER.caja_de_cambios (
     id INT NOT NULL IDENTITY PRIMARY KEY,
-	id_auto INT -- FK
+	id_auto INT, -- FK
+	modelo NVARCHAR(255),
+	numero_serie NVARCHAR(255)
 );
 
 CREATE TABLE AJO_DER.freno (
     id INT NOT NULL IDENTITY PRIMARY KEY,
-	id_auto INT -- FK
+	id_auto INT, -- FK
+	numero_serie NVARCHAR(255)
 );
 
 CREATE TABLE AJO_DER.neumatico (
     id INT NOT NULL IDENTITY PRIMARY KEY,
 	id_auto INT, -- FK
-	id_tipo_neumatico INT -- FK
+	id_tipo_neumatico INT, -- FK
+	numero_serie NVARCHAR(255)
 );
 
 CREATE TABLE AJO_DER.tipo_neumatico (
@@ -507,13 +544,266 @@ BEGIN
 		ORDER BY carrera.id, auto.id, PARADA_BOX_VUELTA
 END
 
+
+
+
+
+
+--migracion de motor-- 
+GO
+CREATE PROCEDURE migrar_motores
+AS
+BEGIN 	
+		INSERT INTO motor(
+			modelo,
+			numero_serie
+		)
+		SELECT DISTINCT TELE_MOTOR_MODELO,TELE_MOTOR_NRO_SERIE from [GD1C2022].[gd_esquema].[Maestra] 
+		where TELE_MOTOR_NRO_SERIE is not null
+END
+GO
+CREATE PROCEDURE migrar_estado_de_motor
+AS
+BEGIN 	
+		INSERT INTO estado_de_motor(
+			id_motor,
+			potencia,
+			temperatura_aceite,
+			temperatura_agua,
+			rpm
+		)
+		SELECT id,TELE_MOTOR_POTENCIA,TELE_MOTOR_TEMP_ACEITE,TELE_MOTOR_TEMP_AGUA,TELE_MOTOR_RPM from [GD1C2022].[gd_esquema].[Maestra]
+		JOIN motor ON [GD1C2022].[gd_esquema].[Maestra].TELE_MOTOR_NRO_SERIE = motor.numero_serie
+		group by id,TELE_MOTOR_POTENCIA,TELE_MOTOR_TEMP_ACEITE,TELE_MOTOR_TEMP_AGUA,TELE_MOTOR_RPM
+END
+GO
+CREATE PROCEDURE migrar_caja_de_cambios
+AS
+BEGIN 	
+		INSERT INTO caja_de_cambios(
+			modelo,numero_serie
+		)
+		Select DISTINCT TELE_CAJA_MODELO,TELE_CAJA_NRO_SERIE from [GD1C2022].[gd_esquema].[Maestra] where TELE_CAJA_NRO_SERIE is not null
+END
+GO
+CREATE PROCEDURE migrar_estado_de_caja_de_cambios
+AS
+BEGIN 	
+		INSERT INTO estado_de_caja_de_cambios(
+			id_caja_de_cambios,
+			temperatura_aceite,
+			rpm,
+			desgaste
+		)
+		Select id,TELE_CAJA_TEMP_ACEITE,TELE_CAJA_RPM,TELE_CAJA_DESGASTE from [GD1C2022].[gd_esquema].[Maestra]
+		JOIN caja_de_cambios ON [GD1C2022].[gd_esquema].[Maestra].TELE_CAJA_NRO_SERIE = caja_de_cambios.numero_serie
+		group by id,TELE_CAJA_DESGASTE,TELE_CAJA_RPM,TELE_CAJA_TEMP_ACEITE
+END
+GO
+CREATE PROCEDURE migrar_frenos
+AS
+BEGIN 	
+		INSERT INTO freno(
+			numero_serie
+		)
+		SELECT DISTINCT TELE_FRENO1_NRO_SERIE from [GD1C2022].[gd_esquema].[Maestra] where TELE_FRENO1_NRO_SERIE is not null
+
+		INSERT INTO freno(
+			numero_serie
+		)
+		SELECT DISTINCT TELE_FRENO2_NRO_SERIE from [GD1C2022].[gd_esquema].[Maestra] where TELE_FRENO3_NRO_SERIE is not null
+
+		INSERT INTO freno(
+			numero_serie
+		)
+		SELECT DISTINCT TELE_FRENO3_NRO_SERIE from [GD1C2022].[gd_esquema].[Maestra] where TELE_FRENO3_NRO_SERIE is not null
+
+		INSERT INTO freno(
+			numero_serie
+		)
+		SELECT DISTINCT TELE_FRENO4_NRO_SERIE from [GD1C2022].[gd_esquema].[Maestra] where TELE_FRENO4_NRO_SERIE is not null
+END
+GO
+CREATE PROCEDURE migrar_estado_de_freno_1
+AS
+BEGIN 	
+		INSERT INTO estado_freno(
+			id_freno,
+			grosor_pastilla,
+			posicion,
+			tamanio_disco,
+			temperatura
+			)
+		SELECT freno.id,TELE_FRENO1_GROSOR_PASTILLA,TELE_FRENO1_POSICION,TELE_FRENO1_TAMANIO_DISCO,TELE_FRENO1_TEMPERATURA from [GD1C2022].[gd_esquema].[Maestra]
+		JOIN freno ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO1_NRO_SERIE = freno.numero_serie
+		group by freno.id,TELE_FRENO1_GROSOR_PASTILLA,TELE_FRENO1_POSICION,TELE_FRENO1_TAMANIO_DISCO,TELE_FRENO1_TEMPERATURA
+END
+GO
+CREATE PROCEDURE migrar_estado_de_freno_2
+AS
+BEGIN 	
+		INSERT INTO estado_freno(
+			id_freno,
+			grosor_pastilla,
+			posicion,
+			tamanio_disco,
+			temperatura
+		)
+		Select freno.id,TELE_FRENO2_GROSOR_PASTILLA,TELE_FRENO2_POSICION,TELE_FRENO2_TAMANIO_DISCO,TELE_FRENO2_TEMPERATURA from [GD1C2022].[gd_esquema].[Maestra]
+		JOIN freno ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO2_NRO_SERIE = freno.numero_serie
+		group by freno.id,TELE_FRENO2_GROSOR_PASTILLA,TELE_FRENO2_POSICION,TELE_FRENO2_TAMANIO_DISCO,TELE_FRENO2_TEMPERATURA
+END
+GO
+CREATE PROCEDURE migrar_estado_de_freno_3
+AS
+BEGIN 	
+		INSERT INTO estado_freno(
+			id_freno,
+			grosor_pastilla,
+			posicion,
+			tamanio_disco,
+			temperatura
+		)
+		SELECT freno.id,TELE_FRENO3_GROSOR_PASTILLA,TELE_FRENO3_POSICION,TELE_FRENO3_TAMANIO_DISCO,TELE_FRENO3_TEMPERATURA from [GD1C2022].[gd_esquema].[Maestra]
+		JOIN freno ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO3_NRO_SERIE = freno.numero_serie
+		group by freno.id,TELE_FRENO3_GROSOR_PASTILLA,TELE_FRENO3_POSICION,TELE_FRENO3_TAMANIO_DISCO,TELE_FRENO3_TEMPERATURA
+END
+GO
+CREATE PROCEDURE migrar_estado_de_freno_4
+AS
+BEGIN 	
+		INSERT INTO estado_freno(
+			id_freno,
+			grosor_pastilla,
+			posicion,
+			tamanio_disco,
+			temperatura
+		)
+		SELECT freno.id,TELE_FRENO4_GROSOR_PASTILLA,TELE_FRENO4_POSICION,TELE_FRENO4_TAMANIO_DISCO,TELE_FRENO4_TEMPERATURA from [GD1C2022].[gd_esquema].[Maestra]
+		JOIN freno ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO4_NRO_SERIE = freno.numero_serie
+		group by freno.id,TELE_FRENO4_GROSOR_PASTILLA,TELE_FRENO4_POSICION,TELE_FRENO4_TAMANIO_DISCO,TELE_FRENO4_TEMPERATURA
+END
+GO
+CREATE PROCEDURE migrar_tipo_neumatico
+AS
+BEGIN 	
+		INSERT INTO tipo_neumatico(
+			tipo
+		)
+		SELECT DISTINCT NEUMATICO1_TIPO_NUEVO from [GD1C2022].[gd_esquema].[Maestra]
+		WHERE NEUMATICO1_TIPO_VIEJO is not null 
+END
+GO
+CREATE PROCEDURE migrar_neumaticos_1
+AS
+BEGIN 	
+		INSERT INTO neumatico(
+			numero_serie,
+			id_tipo_neumatico
+		)
+		SELECT DISTINCT NEUMATICO1_NRO_SERIE_NUEVO,tipo_neumatico.id from [GD1C2022].[gd_esquema].[Maestra]
+		JOIN tipo_neumatico ON [GD1C2022].[gd_esquema].[Maestra].NEUMATICO1_TIPO_NUEVO = tipo_neumatico.tipo
+		group by NEUMATICO1_NRO_SERIE_NUEVO,tipo_neumatico.id
+
+		INSERT INTO neumatico(
+			numero_serie,
+			id_tipo_neumatico
+		)
+		SELECT DISTINCT NEUMATICO1_NRO_SERIE_VIEJO,tipo_neumatico.id from [GD1C2022].[gd_esquema].[Maestra]
+		JOIN tipo_neumatico ON [GD1C2022].[gd_esquema].[Maestra].NEUMATICO1_TIPO_NUEVO = tipo_neumatico.tipo
+		group by NEUMATICO1_NRO_SERIE_VIEJO,tipo_neumatico.id
+END
+GO
+CREATE PROCEDURE migrar_neumaticos_2
+AS
+BEGIN 	
+		INSERT INTO neumatico(
+			numero_serie,
+			id_tipo_neumatico
+		)
+		SELECT DISTINCT NEUMATICO2_NRO_SERIE_NUEVO,tipo_neumatico.id from [GD1C2022].[gd_esquema].[Maestra]
+		JOIN tipo_neumatico ON [GD1C2022].[gd_esquema].[Maestra].NEUMATICO2_TIPO_NUEVO = tipo_neumatico.tipo
+		group by NEUMATICO2_NRO_SERIE_NUEVO,tipo_neumatico.id
+
+		INSERT INTO neumatico(
+			numero_serie,
+			id_tipo_neumatico
+		)
+		SELECT DISTINCT NEUMATICO2_NRO_SERIE_VIEJO,tipo_neumatico.id from [GD1C2022].[gd_esquema].[Maestra]
+		JOIN tipo_neumatico ON [GD1C2022].[gd_esquema].[Maestra].NEUMATICO2_TIPO_NUEVO = tipo_neumatico.tipo
+		group by NEUMATICO2_NRO_SERIE_VIEJO,tipo_neumatico.id
+END
+GO
+CREATE PROCEDURE migrar_neumaticos_3
+AS
+BEGIN 	
+		INSERT INTO neumatico(
+			numero_serie,
+			id_tipo_neumatico
+		)
+		SELECT DISTINCT NEUMATICO3_NRO_SERIE_NUEVO,tipo_neumatico.id from [GD1C2022].[gd_esquema].[Maestra]
+		JOIN tipo_neumatico ON [GD1C2022].[gd_esquema].[Maestra].NEUMATICO3_TIPO_NUEVO = tipo_neumatico.tipo
+		group by NEUMATICO3_NRO_SERIE_NUEVO,tipo_neumatico.id
+
+		INSERT INTO neumatico(
+			numero_serie,
+			id_tipo_neumatico
+		)
+		SELECT DISTINCT NEUMATICO3_NRO_SERIE_VIEJO,tipo_neumatico.id from [GD1C2022].[gd_esquema].[Maestra]
+		JOIN tipo_neumatico ON [GD1C2022].[gd_esquema].[Maestra].NEUMATICO3_TIPO_NUEVO = tipo_neumatico.tipo
+		group by NEUMATICO3_NRO_SERIE_VIEJO,tipo_neumatico.id
+END
+GO
+CREATE PROCEDURE migrar_neumaticos_4
+AS
+BEGIN 	
+		INSERT INTO neumatico(
+			numero_serie,
+			id_tipo_neumatico
+		)
+		SELECT DISTINCT NEUMATICO4_NRO_SERIE_NUEVO,tipo_neumatico.id from [GD1C2022].[gd_esquema].[Maestra]
+		JOIN tipo_neumatico ON [GD1C2022].[gd_esquema].[Maestra].NEUMATICO4_TIPO_NUEVO = tipo_neumatico.tipo
+		group by NEUMATICO4_NRO_SERIE_NUEVO,tipo_neumatico.id
+
+		INSERT INTO neumatico(
+			numero_serie,
+			id_tipo_neumatico
+		)
+		SELECT DISTINCT NEUMATICO4_NRO_SERIE_VIEJO,tipo_neumatico.id from [GD1C2022].[gd_esquema].[Maestra]
+		JOIN tipo_neumatico ON [GD1C2022].[gd_esquema].[Maestra].NEUMATICO4_TIPO_NUEVO = tipo_neumatico.tipo
+		group by NEUMATICO4_NRO_SERIE_VIEJO,tipo_neumatico.id
+END
+GO
+
 -- Migrar cambio_neumaticos
 -- Pendiente
 
-EXEC migrar_tipo_sector
-EXEC migrar_pais
-EXEC migrar_circuito
-EXEC migrar_sector
-EXEC migrar_carrera
-EXEC migrar_medicion
-EXEC migrar_parada_box
+
+CREATE PROCEDURE iniciar_migracion_de_tablas
+AS
+BEGIN 
+	EXEC migrar_tipo_sector
+	EXEC migrar_pais
+	EXEC migrar_circuito
+	EXEC migrar_sector
+	EXEC migrar_carrera
+	EXEC migrar_medicion
+	EXEC migrar_parada_box
+	EXEC migrar_motores;
+	EXEC migrar_estado_de_motor;
+	EXEC migrar_caja_de_cambios;
+	EXEC migrar_estado_de_caja_de_cambios;
+	EXEC migrar_frenos;
+	EXEC migrar_estado_de_freno_1;
+	EXEC migrar_estado_de_freno_2;
+	EXEC migrar_estado_de_freno_3;
+	EXEC migrar_estado_de_freno_4;
+	EXEC migrar_tipo_neumatico;
+	EXEC migrar_neumaticos_1;
+	EXEC migrar_neumaticos_2;
+	EXEC migrar_neumaticos_3;
+	EXEC migrar_neumaticos_4;
+END
+GO
+
+EXEC iniciar_migracion_de_tablas;
