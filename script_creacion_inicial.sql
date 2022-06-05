@@ -2,129 +2,162 @@ USE GD1C2022
 GO
 
 -- Eliminacion de tablas
-CREATE PROCEDURE eliminar_tablas
-AS
-BEGIN 	
-	IF OBJECT_ID('AJO_DER.[cambio_neumaticos]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[cambio_neumaticos]
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'parada_box')
+		DROP TABLE parada_box
 
-	IF OBJECT_ID('AJO_DER.[parada_box]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[parada_box]
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'cambio_neumaticos')
+		DROP TABLE cambio_neumaticos
 
-	IF OBJECT_ID('AJO_DER.[incidente_auto]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[incidente_auto]
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'auto')
+		DROP TABLE auto
 
-	IF OBJECT_ID('AJO_DER.[tipo_incidente]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[tipo_incidente]
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'posicion')
+		DROP TABLE posicion
 
-	IF OBJECT_ID('AJO_DER.[incidente]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[incidente]
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'escuderia')
+		DROP TABLE escuderia
 
-	IF OBJECT_ID('AJO_DER.[bandera]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[bandera]
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'piloto')
+		DROP TABLE piloto
 
-	IF OBJECT_ID('AJO_DER.[estado_de_caja_de_cambios]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[estado_de_caja_de_cambios]
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'motor')
+		DROP TABLE motor
 
-	IF OBJECT_ID('AJO_DER.[estado_neumatico]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[estado_neumatico]
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'caja_de_cambios')
+		DROP TABLE caja_de_cambios
 
-	IF OBJECT_ID('AJO_DER.[estado_freno]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[estado_freno]
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'freno')
+		DROP TABLE freno
 
-	IF OBJECT_ID('AJO_DER.[estado_de_motor]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[estado_de_motor]
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'neumatico')
+		DROP TABLE neumatico
 
-	IF OBJECT_ID('AJO_DER.[freno]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[freno]
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'tipo_neumatico')
+		DROP TABLE tipo_neumatico
 
-	IF OBJECT_ID('AJO_DER.[motor]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[motor]
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'estado_de_motor')
+		DROP TABLE estado_de_motor
 
-	IF OBJECT_ID('AJO_DER.[caja_de_cambios]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[caja_de_cambios]
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'estado_de_caja_de_cambios')
+		DROP TABLE estado_de_caja_de_cambios
 
-	IF OBJECT_ID('AJO_DER.[medicion]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[medicion]
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'bandera')
+		DROP TABLE bandera
 
-	IF OBJECT_ID('AJO_DER.[sector]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[sector]
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'tipo_incidente')
+		DROP TABLE tipo_incidente
 
-	IF OBJECT_ID('AJO_DER.[Tipo_sector]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[Tipo_sector]
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'incidente')
+		DROP TABLE incidente
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'incidente_auto')
+		DROP TABLE incidente_auto
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'sector')
+		DROP TABLE sector
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'tipo_sector')
+		DROP TABLE tipo_sector
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'pais')
+		DROP TABLE pais
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'circuito')
+		DROP TABLE circuito
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'medicion')
+		DROP TABLE medicion
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'carrera')
+		DROP TABLE carrera
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'estado_freno')
+		DROP TABLE estado_freno
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'estado_neumatico')
+		DROP TABLE estado_neumatico
 
 
-	IF OBJECT_ID('AJO_DER.[carrera]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[carrera]
+-- Eliminacion de store procedure
+	IF OBJECT_ID('migrar_tipo_sector', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_tipo_sector
 
-	IF OBJECT_ID('AJO_DER.[circuito]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[circuito]
-
-	IF OBJECT_ID('AJO_DER.[neumatico]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[neumatico]
-
-	IF OBJECT_ID('AJO_DER.[tipo_neumatico]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[tipo_neumatico]
+	IF OBJECT_ID('migrar_pais', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_pais
 	
+	IF OBJECT_ID('migrar_circuito', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_circuito
 
-	IF OBJECT_ID('AJO_DER.[auto]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[auto]
+	IF OBJECT_ID('migrar_sector', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_sector
+
+	IF OBJECT_ID('migrar_carrera', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_carrera
+
+	IF OBJECT_ID('migrar_medicion', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_medicion
+
+	IF OBJECT_ID('migrar_parada_box', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_parada_box
+
+	IF OBJECT_ID('migrar_motores', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_motores
+
+	IF OBJECT_ID('migrar_estado_de_motor', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_estado_de_motor
+
+	IF OBJECT_ID('migrar_caja_de_cambios', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_caja_de_cambios
+
+	IF OBJECT_ID('migrar_estado_de_caja_de_cambios', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_estado_de_caja_de_cambios
+
+	IF OBJECT_ID('migrar_frenos', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_frenos
+
+	IF OBJECT_ID('migrar_estado_de_freno_1', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_estado_de_freno_1
+
+	IF OBJECT_ID('migrar_estado_de_freno_2', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_estado_de_freno_2
+
+	IF OBJECT_ID('migrar_estado_de_freno_3', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_estado_de_freno_3
+
+	IF OBJECT_ID('migrar_estado_de_freno_4', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_estado_de_freno_4
+
+	IF OBJECT_ID('migrar_tipo_neumatico', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_tipo_neumatico
+
+	IF OBJECT_ID('migrar_neumaticos_1', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_neumaticos_1
+
+	IF OBJECT_ID('migrar_neumaticos_2', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_neumaticos_2
+
+	IF OBJECT_ID('migrar_neumaticos_3', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_neumaticos_3
+
+	IF OBJECT_ID('migrar_neumaticos_4', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_neumaticos_4
 
 
-	IF OBJECT_ID('AJO_DER.[escuderia]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[escuderia]
+	IF OBJECT_ID('migrar_tablas', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_tablas
 
-	IF OBJECT_ID('AJO_DER.[posicion]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[posicion]
 
-	IF OBJECT_ID('AJO_DER.[piloto]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[piloto]
-
-	IF OBJECT_ID('AJO_DER.[pais]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[pais]
-
-	IF OBJECT_ID('AJO_DER.[nacionalidad]','U') IS NOT NULL
-		DROP TABLE AJO_DER.[nacionalidad]
-
-	DROP PROCEDURE IF EXISTS AJO_DER.borar_procedures
-	
-END
+-- Eliminacion de esquema
+IF EXISTS (SELECT name FROM sys.schemas WHERE name LIKE 'AJO_DER')
+    DROP SCHEMA AJO_DER
 GO
 
-CREATE PROCEDURE borar_procedures
-AS
-BEGIN
-	
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_tipo_sector
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_pais
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_circuito
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_sector
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_carrera
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_medicion
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_parada_box
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_motores
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_estado_de_motor
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_caja_de_cambios
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_estado_de_caja_de_cambios
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_frenos
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_estado_de_freno_1
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_estado_de_freno_2
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_estado_de_freno_3
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_estado_de_freno_4
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_tipo_neumatico
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_neumaticos_1
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_neumaticos_2
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_neumaticos_3
-	DROP PROCEDURE IF EXISTS AJO_DER.migrar_neumaticos_4
-END
+-- Creacion de esquema
+CREATE SCHEMA AJO_DER
 GO
 
 -- Creacion de tablas
-CREATE PROCEDURE crear_tablas
-AS
-BEGIN
-
-  CREATE TABLE AJO_DER.parada_box (
+  CREATE TABLE parada_box (
       id INT NOT NULL IDENTITY PRIMARY KEY,
     id_carrera INT, -- FK
       id_auto INT, -- FK
@@ -132,7 +165,7 @@ BEGIN
     tiempo_parada DECIMAL(18,2)
   );
 
-  CREATE TABLE AJO_DER.cambio_neumaticos (
+  CREATE TABLE cambio_neumaticos (
       id INT NOT NULL IDENTITY PRIMARY KEY,
     id_parada_box INT, -- FK
       id_neumatico_anterior INT, -- FK
@@ -140,7 +173,7 @@ BEGIN
     id_posicion INT -- FK
   );
 
-  CREATE TABLE AJO_DER.auto (
+  CREATE TABLE auto (
       id INT NOT NULL IDENTITY PRIMARY KEY,
       id_escuderia INT, -- FK
       id_piloto INT, -- FK
@@ -148,18 +181,18 @@ BEGIN
     modelo VARCHAR(10)
   );
 
-  CREATE TABLE AJO_DER.posicion (
+  CREATE TABLE posicion (
       id INT NOT NULL IDENTITY PRIMARY KEY,
     descripcion VARCHAR(10)
   );
 
-  CREATE TABLE AJO_DER.escuderia (
+  CREATE TABLE escuderia (
       id INT NOT NULL IDENTITY PRIMARY KEY,
       nombre VARCHAR(10),
       id_nacionalidad INT -- FK
   );
 
-  CREATE TABLE AJO_DER.piloto (
+  CREATE TABLE piloto (
       id INT NOT NULL IDENTITY PRIMARY KEY,
       id_nacionalidad INT, -- FK
       nombre VARCHAR(10),
@@ -167,44 +200,44 @@ BEGIN
     fecha_nacimiento DATETIME
   );
 
-  CREATE TABLE AJO_DER.nacionalidad (
+  CREATE TABLE nacionalidad (
       id INT NOT NULL IDENTITY PRIMARY KEY,
       nombre VARCHAR(50)
   );
 
-  CREATE TABLE AJO_DER.motor (
+  CREATE TABLE motor (
       id INT NOT NULL IDENTITY PRIMARY KEY,
     id_auto INT, -- FK
     modelo NVARCHAR(255),
     numero_serie NVARCHAR(255)
   );
 
-  CREATE TABLE AJO_DER.caja_de_cambios (
+  CREATE TABLE caja_de_cambios (
       id INT NOT NULL IDENTITY PRIMARY KEY,
     id_auto INT, -- FK
     modelo NVARCHAR(255),
     numero_serie NVARCHAR(255)
   );
 
-  CREATE TABLE AJO_DER.freno (
+  CREATE TABLE freno (
       id INT NOT NULL IDENTITY PRIMARY KEY,
     id_auto INT, -- FK
     numero_serie NVARCHAR(255)
   );
 
-  CREATE TABLE AJO_DER.neumatico (
+  CREATE TABLE neumatico (
       id INT NOT NULL IDENTITY PRIMARY KEY,
     id_auto INT, -- FK
     id_tipo_neumatico INT, -- FK
     numero_serie NVARCHAR(255)
   );
 
-  CREATE TABLE AJO_DER.tipo_neumatico (
+  CREATE TABLE tipo_neumatico (
       id INT NOT NULL IDENTITY PRIMARY KEY,
     tipo VARCHAR(10)
   );
 
-  CREATE TABLE AJO_DER.estado_de_motor (
+  CREATE TABLE estado_de_motor (
       id INT NOT NULL IDENTITY PRIMARY KEY,
     id_medicion INT, -- FK
     id_motor INT, -- FK
@@ -214,7 +247,7 @@ BEGIN
     rpm INT
   );
 
-  CREATE TABLE AJO_DER.estado_de_caja_de_cambios (
+  CREATE TABLE estado_de_caja_de_cambios (
       id INT NOT NULL IDENTITY PRIMARY KEY,
     id_medicion INT, -- FK
     id_caja_de_cambios INT, -- FK
@@ -224,17 +257,17 @@ BEGIN
     desgaste DECIMAL
   );
 
-  CREATE TABLE AJO_DER.bandera (
+  CREATE TABLE bandera (
     id INT NOT NULL IDENTITY PRIMARY KEY,
     color VARCHAR
   );
 
-  CREATE TABLE AJO_DER.tipo_incidente (
+  CREATE TABLE tipo_incidente (
     id INT NOT NULL IDENTITY PRIMARY KEY,
     tipo VARCHAR
   );
 
-  CREATE TABLE AJO_DER.incidente (
+  CREATE TABLE incidente (
     id INT NOT NULL IDENTITY PRIMARY KEY,
     id_carrera INT, -- FK
     id_sector INT, -- FK
@@ -243,14 +276,14 @@ BEGIN
     fecha DATETIME
   );
 
-  CREATE TABLE AJO_DER.incidente_auto (
+  CREATE TABLE incidente_auto (
     id_incidente INT, -- FK
     id_auto INT, -- FK
     id_tipo_incidente INT, -- FK
     numero_vuelta INT
   );
 
-  CREATE TABLE AJO_DER.sector (
+  CREATE TABLE sector (
     id INT NOT NULL IDENTITY PRIMARY KEY,
     id_circuito INT, -- FK
     id_tipo_sector INT, -- FK
@@ -258,24 +291,24 @@ BEGIN
     codigo INT
   );
 
-  CREATE TABLE AJO_DER.tipo_sector (
+  CREATE TABLE tipo_sector (
     id INT NOT NULL IDENTITY PRIMARY KEY,
     tipo VARCHAR(255)
   );
 
-  CREATE TABLE AJO_DER.pais (
+  CREATE TABLE pais (
     id INT NOT NULL IDENTITY PRIMARY KEY,
     nombre VARCHAR(255)
   );
 
-  CREATE TABLE AJO_DER.circuito (
+  CREATE TABLE circuito (
     id INT NOT NULL IDENTITY PRIMARY KEY,
     id_pais INT, -- FK
     codigo INT,
     nombre VARCHAR(255)
   );
 
-  CREATE TABLE AJO_DER.medicion (
+  CREATE TABLE medicion (
     id INT NOT NULL IDENTITY PRIMARY KEY,
     id_auto INT, -- FK
     id_carrera INT, -- FK
@@ -289,7 +322,7 @@ BEGIN
     cant_combustible DECIMAL(18,2)
   );
 
-  CREATE TABLE AJO_DER.carrera (
+  CREATE TABLE carrera (
     id INT NOT NULL IDENTITY PRIMARY KEY,
     id_circuito INT, -- FK
     cant_vueltas INT,
@@ -299,7 +332,7 @@ BEGIN
     total_carrera DECIMAL(18,2)
   );
 
-  CREATE TABLE AJO_DER.estado_freno (
+  CREATE TABLE estado_freno (
     id INT NOT NULL IDENTITY PRIMARY KEY,
     id_medicion INT, -- FK
     id_freno INT, -- FK
@@ -308,7 +341,7 @@ BEGIN
     temperatura DECIMAL
   );
 
-  CREATE TABLE AJO_DER.estado_neumatico (
+  CREATE TABLE estado_neumatico (
     id INT NOT NULL IDENTITY PRIMARY KEY,
     id_medicion INT, -- FK
     id_neumatico INT, -- FK
@@ -320,54 +353,54 @@ BEGIN
 
 
 	-- FKs de parada_box
-	ALTER TABLE AJO_DER.parada_box ADD FOREIGN KEY(id_carrera) REFERENCES AJO_DER.carrera(id);
-	ALTER TABLE AJO_DER.parada_box ADD FOREIGN KEY(id_auto) REFERENCES AJO_DER.auto(id);
+	ALTER TABLE parada_box ADD FOREIGN KEY(id_carrera) REFERENCES carrera(id);
+	ALTER TABLE parada_box ADD FOREIGN KEY(id_auto) REFERENCES auto(id);
 
 	-- FKs de cambio_neumaticos
-	ALTER TABLE AJO_DER.cambio_neumaticos ADD FOREIGN KEY(id_parada_box) REFERENCES AJO_DER.parada_box(id);
-	ALTER TABLE AJO_DER.cambio_neumaticos ADD FOREIGN KEY(id_neumatico_anterior) REFERENCES AJO_DER.neumatico(id);
-	ALTER TABLE AJO_DER.cambio_neumaticos ADD FOREIGN KEY(id_neumatico_nuevo) REFERENCES AJO_DER.neumatico(id);
-	ALTER TABLE AJO_DER.cambio_neumaticos ADD FOREIGN KEY(id_posicion) REFERENCES AJO_DER.posicion(id);
+	ALTER TABLE cambio_neumaticos ADD FOREIGN KEY(id_parada_box) REFERENCES parada_box(id);
+	ALTER TABLE cambio_neumaticos ADD FOREIGN KEY(id_neumatico_anterior) REFERENCES neumatico(id);
+	ALTER TABLE cambio_neumaticos ADD FOREIGN KEY(id_neumatico_nuevo) REFERENCES neumatico(id);
+	ALTER TABLE cambio_neumaticos ADD FOREIGN KEY(id_posicion) REFERENCES posicion(id);
 
 	-- FKs de auto
-	ALTER TABLE AJO_DER.auto ADD FOREIGN KEY(id_escuderia) REFERENCES AJO_DER.escuderia(id);
-	ALTER TABLE AJO_DER.auto ADD FOREIGN KEY(id_piloto) REFERENCES AJO_DER.piloto(id);
+	ALTER TABLE auto ADD FOREIGN KEY(id_escuderia) REFERENCES escuderia(id);
+	ALTER TABLE auto ADD FOREIGN KEY(id_piloto) REFERENCES piloto(id);
 
 	-- FKs de posicion
 	-- N/A
 
 	-- FKs de escuderia
-	ALTER TABLE AJO_DER.escuderia ADD FOREIGN KEY(id_nacionalidad) REFERENCES AJO_DER.nacionalidad(id);
+	ALTER TABLE escuderia ADD FOREIGN KEY(id_nacionalidad) REFERENCES nacionalidad(id);
 
 	-- FKs de piloto
-	ALTER TABLE AJO_DER.piloto ADD FOREIGN KEY(id_nacionalidad) REFERENCES AJO_DER.nacionalidad(id);
+	ALTER TABLE piloto ADD FOREIGN KEY(id_nacionalidad) REFERENCES nacionalidad(id);
 
 	-- FKs de nacionalidad
 	-- N/A
 
 	-- FKs de motor
-	ALTER TABLE AJO_DER.motor ADD FOREIGN KEY(id_auto) REFERENCES AJO_DER.auto(id);
+	ALTER TABLE motor ADD FOREIGN KEY(id_auto) REFERENCES auto(id);
 
 	-- FKs de caja_de_cambios
-	ALTER TABLE AJO_DER.caja_de_cambios ADD FOREIGN KEY(id_auto) REFERENCES AJO_DER.auto(id);
+	ALTER TABLE caja_de_cambios ADD FOREIGN KEY(id_auto) REFERENCES auto(id);
 
 	-- FKs de freno
-	ALTER TABLE AJO_DER.freno ADD FOREIGN KEY(id_auto) REFERENCES AJO_DER.auto(id);
+	ALTER TABLE freno ADD FOREIGN KEY(id_auto) REFERENCES auto(id);
 
 	-- FKs de neumatico
-	ALTER TABLE AJO_DER.neumatico ADD FOREIGN KEY(id_auto) REFERENCES AJO_DER.auto(id);
-	ALTER TABLE AJO_DER.neumatico ADD FOREIGN KEY(id_tipo_neumatico) REFERENCES AJO_DER.tipo_neumatico(id);
+	ALTER TABLE neumatico ADD FOREIGN KEY(id_auto) REFERENCES auto(id);
+	ALTER TABLE neumatico ADD FOREIGN KEY(id_tipo_neumatico) REFERENCES tipo_neumatico(id);
 
 	-- FKs de tipo_neumatico
 	-- N/A
 
 	-- FKs de estado_de_motor
-	ALTER TABLE AJO_DER.estado_de_motor ADD FOREIGN KEY(id_medicion) REFERENCES AJO_DER.medicion(id);
-	ALTER TABLE AJO_DER.estado_de_motor ADD FOREIGN KEY(id_motor) REFERENCES AJO_DER.motor(id);
+	ALTER TABLE estado_de_motor ADD FOREIGN KEY(id_medicion) REFERENCES medicion(id);
+	ALTER TABLE estado_de_motor ADD FOREIGN KEY(id_motor) REFERENCES motor(id);
 
 	-- FKs de estado_de_caja_de_cambios
-	ALTER TABLE AJO_DER.estado_de_caja_de_cambios ADD FOREIGN KEY(id_medicion) REFERENCES AJO_DER.medicion(id);
-	ALTER TABLE AJO_DER.estado_de_caja_de_cambios ADD FOREIGN KEY(id_caja_de_cambios) REFERENCES AJO_DER.caja_de_cambios(id);
+	ALTER TABLE estado_de_caja_de_cambios ADD FOREIGN KEY(id_medicion) REFERENCES medicion(id);
+	ALTER TABLE estado_de_caja_de_cambios ADD FOREIGN KEY(id_caja_de_cambios) REFERENCES caja_de_cambios(id);
 
 	-- FKs de bandera
 	-- N/A
@@ -376,18 +409,18 @@ BEGIN
 	-- N/A
 
 	-- FKs de incidente
-	ALTER TABLE AJO_DER.incidente ADD FOREIGN KEY(id_carrera) REFERENCES AJO_DER.carrera(id);
-	ALTER TABLE AJO_DER.incidente ADD FOREIGN KEY(id_sector) REFERENCES AJO_DER.sector(id);
-	ALTER TABLE AJO_DER.incidente ADD FOREIGN KEY(id_bandera) REFERENCES AJO_DER.bandera(id);
+	ALTER TABLE incidente ADD FOREIGN KEY(id_carrera) REFERENCES carrera(id);
+	ALTER TABLE incidente ADD FOREIGN KEY(id_sector) REFERENCES sector(id);
+	ALTER TABLE incidente ADD FOREIGN KEY(id_bandera) REFERENCES bandera(id);
 
 	-- FKs de incidente_auto
-	ALTER TABLE AJO_DER.incidente_auto ADD FOREIGN KEY(id_incidente) REFERENCES AJO_DER.incidente(id);
-	ALTER TABLE AJO_DER.incidente_auto ADD FOREIGN KEY(id_auto) REFERENCES AJO_DER.auto(id);
-	ALTER TABLE AJO_DER.incidente_auto ADD FOREIGN KEY(id_tipo_incidente) REFERENCES AJO_DER.tipo_incidente(id);
+	ALTER TABLE incidente_auto ADD FOREIGN KEY(id_incidente) REFERENCES incidente(id);
+	ALTER TABLE incidente_auto ADD FOREIGN KEY(id_auto) REFERENCES auto(id);
+	ALTER TABLE incidente_auto ADD FOREIGN KEY(id_tipo_incidente) REFERENCES tipo_incidente(id);
 
 	-- FKs de sector
-	ALTER TABLE AJO_DER.sector ADD FOREIGN KEY(id_circuito) REFERENCES AJO_DER.circuito(id);
-	ALTER TABLE AJO_DER.sector ADD FOREIGN KEY(id_tipo_sector) REFERENCES AJO_DER.tipo_sector(id);
+	ALTER TABLE sector ADD FOREIGN KEY(id_circuito) REFERENCES circuito(id);
+	ALTER TABLE sector ADD FOREIGN KEY(id_tipo_sector) REFERENCES tipo_sector(id);
 
 	-- FKs de tipo_sector
 	-- N/A
@@ -396,43 +429,42 @@ BEGIN
 	-- N/A
 
 	-- FKs de circuito
-	ALTER TABLE AJO_DER.circuito ADD FOREIGN KEY(id_pais) REFERENCES AJO_DER.pais(id);
+	ALTER TABLE circuito ADD FOREIGN KEY(id_pais) REFERENCES pais(id);
 
 	-- FKs de medicion
-	ALTER TABLE AJO_DER.medicion ADD FOREIGN KEY(id_auto) REFERENCES AJO_DER.auto(id);
-	ALTER TABLE AJO_DER.medicion ADD FOREIGN KEY(id_carrera) REFERENCES AJO_DER.carrera(id);
-	ALTER TABLE AJO_DER.medicion ADD FOREIGN KEY(id_sector) REFERENCES AJO_DER.sector(id);
+	ALTER TABLE medicion ADD FOREIGN KEY(id_auto) REFERENCES auto(id);
+	ALTER TABLE medicion ADD FOREIGN KEY(id_carrera) REFERENCES carrera(id);
+	ALTER TABLE medicion ADD FOREIGN KEY(id_sector) REFERENCES sector(id);
 
 	-- FKs de carrera
-	ALTER TABLE AJO_DER.carrera ADD FOREIGN KEY(id_circuito) REFERENCES AJO_DER.circuito(id);
+	ALTER TABLE carrera ADD FOREIGN KEY(id_circuito) REFERENCES circuito(id);
 
 	-- FKs de estado_freno
-	ALTER TABLE AJO_DER.estado_freno ADD FOREIGN KEY(id_medicion) REFERENCES AJO_DER.medicion(id);
-	ALTER TABLE AJO_DER.estado_freno ADD FOREIGN KEY(id_freno) REFERENCES AJO_DER.freno(id);
-	ALTER TABLE AJO_DER.estado_freno ADD FOREIGN KEY(id_posicion) REFERENCES AJO_DER.posicion(id);
+	ALTER TABLE estado_freno ADD FOREIGN KEY(id_medicion) REFERENCES medicion(id);
+	ALTER TABLE estado_freno ADD FOREIGN KEY(id_freno) REFERENCES freno(id);
+	ALTER TABLE estado_freno ADD FOREIGN KEY(id_posicion) REFERENCES posicion(id);
 
 	-- FKs de estado_neumatico
-	ALTER TABLE AJO_DER.estado_neumatico ADD FOREIGN KEY(id_medicion) REFERENCES AJO_DER.medicion(id);
-	ALTER TABLE AJO_DER.estado_neumatico ADD FOREIGN KEY(id_neumatico) REFERENCES AJO_DER.neumatico(id);
-	ALTER TABLE AJO_DER.estado_neumatico ADD FOREIGN KEY(id_posicion) REFERENCES AJO_DER.posicion(id);
-END
-GO
+	ALTER TABLE estado_neumatico ADD FOREIGN KEY(id_medicion) REFERENCES medicion(id);
+	ALTER TABLE estado_neumatico ADD FOREIGN KEY(id_neumatico) REFERENCES neumatico(id);
+	ALTER TABLE estado_neumatico ADD FOREIGN KEY(id_posicion) REFERENCES posicion(id);
 
+GO
 -- Migrar tipo_sector
 CREATE PROCEDURE migrar_tipo_sector
 AS
-BEGIN
-	INSERT INTO AJO_DER.tipo_sector(tipo)
-	SELECT DISTINCT SECTO_TIPO FROM GD1C2022.gd_esquema.Maestra
+	BEGIN
+		INSERT INTO tipo_sector
+		SELECT DISTINCT SECTO_TIPO FROM GD1C2022.gd_esquema.Maestra
 		WHERE SECTO_TIPO IS NOT NULL
-END
+	END
 GO
 
 -- Migrar pais
 CREATE PROCEDURE migrar_pais
 AS
 BEGIN
-	INSERT INTO AJO_DER.pais(nombre)
+	INSERT INTO pais
 	SELECT DISTINCT CIRCUITO_PAIS FROM GD1C2022.gd_esquema.Maestra
 		WHERE CIRCUITO_PAIS IS NOT NULL
 END
@@ -442,14 +474,10 @@ GO
 CREATE PROCEDURE migrar_circuito
 AS
 BEGIN
-	INSERT INTO AJO_DER.circuito(
-		id_pais,
-		codigo,
-		nombre
-	)
-	SELECT DISTINCT AJO_DER.pais.id, CIRCUITO_CODIGO, CIRCUITO_NOMBRE FROM GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.pais ON GD1C2022.gd_esquema.Maestra.CIRCUITO_PAIS = AJO_DER.pais.nombre
-		GROUP BY AJO_DER.pais.id, CIRCUITO_CODIGO, CIRCUITO_NOMBRE
+	INSERT INTO circuito
+	SELECT DISTINCT pais.id, CIRCUITO_CODIGO, CIRCUITO_NOMBRE FROM GD1C2022.gd_esquema.Maestra
+		JOIN pais ON GD1C2022.gd_esquema.Maestra.CIRCUITO_PAIS = pais.nombre
+		GROUP BY pais.id, CIRCUITO_CODIGO, CIRCUITO_NOMBRE
 		ORDER BY CIRCUITO_CODIGO
 END
 GO
@@ -458,17 +486,17 @@ GO
 CREATE PROCEDURE migrar_sector
 AS
 BEGIN
-	INSERT INTO AJO_DER.sector(
+	INSERT INTO sector(
 		id_circuito,
 		id_tipo_sector,
 		distancia,
 		codigo
 	)
-	SELECT DISTINCT AJO_DER.circuito.id, AJO_DER.tipo_sector.id, SECTOR_DISTANCIA, CODIGO_SECTOR FROM GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.circuito ON GD1C2022.gd_esquema.Maestra.CIRCUITO_CODIGO = AJO_DER.circuito.codigo
-		JOIN AJO_DER.tipo_sector ON GD1C2022.gd_esquema.Maestra.SECTO_TIPO = AJO_DER.tipo_sector.tipo
-		GROUP BY AJO_DER.circuito.id, AJO_DER.tipo_sector.id, SECTOR_DISTANCIA, CODIGO_SECTOR
-		ORDER BY AJO_DER.circuito.id, CODIGO_SECTOR, AJO_DER.tipo_sector.id
+	SELECT DISTINCT circuito.id, tipo_sector.id, SECTOR_DISTANCIA, CODIGO_SECTOR FROM GD1C2022.gd_esquema.Maestra
+		JOIN circuito ON GD1C2022.gd_esquema.Maestra.CIRCUITO_CODIGO = circuito.codigo
+		JOIN tipo_sector ON GD1C2022.gd_esquema.Maestra.SECTO_TIPO = tipo_sector.tipo
+		GROUP BY circuito.id, tipo_sector.id, SECTOR_DISTANCIA, CODIGO_SECTOR
+		ORDER BY circuito.id, CODIGO_SECTOR, tipo_sector.id
 END
 GO
 
@@ -476,17 +504,10 @@ GO
 CREATE PROCEDURE migrar_carrera
 AS
 BEGIN
-	INSERT INTO AJO_DER.carrera(
-		id_circuito,
-		cant_vueltas,
-		fecha,
-		codigo,
-		clima,
-		total_carrera
-	)
-	SELECT DISTINCT AJO_DER.circuito.id, CARRERA_CANT_VUELTAS, CARRERA_FECHA, CODIGO_CARRERA, CARRERA_CLIMA, CARRERA_TOTAL_CARRERA FROM GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.circuito ON GD1C2022.gd_esquema.Maestra.CIRCUITO_CODIGO = AJO_DER.circuito.codigo
-		GROUP BY AJO_DER.circuito.id, CARRERA_CANT_VUELTAS, CARRERA_FECHA, CODIGO_CARRERA, CARRERA_CLIMA, CARRERA_TOTAL_CARRERA
+	INSERT INTO carrera
+	SELECT DISTINCT circuito.id, CARRERA_CANT_VUELTAS, CARRERA_FECHA, CODIGO_CARRERA, CARRERA_CLIMA, CARRERA_TOTAL_CARRERA FROM GD1C2022.gd_esquema.Maestra
+		JOIN circuito ON GD1C2022.gd_esquema.Maestra.CIRCUITO_CODIGO = circuito.codigo
+		GROUP BY circuito.id, CARRERA_CANT_VUELTAS, CARRERA_FECHA, CODIGO_CARRERA, CARRERA_CLIMA, CARRERA_TOTAL_CARRERA
 		ORDER BY CODIGO_CARRERA
 END
 GO
@@ -495,7 +516,7 @@ GO
 CREATE PROCEDURE migrar_medicion
 AS
 BEGIN
-	INSERT INTO AJO_DER.medicion(
+	INSERT INTO medicion(
 		id_auto,
 		id_carrera,
 		id_sector,
@@ -507,13 +528,13 @@ BEGIN
 		velocidad,
 		cant_combustible
 	)
-	SELECT DISTINCT AJO_DER.auto.id, AJO_DER.carrera.id, AJO_DER.sector.id, TELE_AUTO_NUMERO_VUELTA, TELE_AUTO_DISTANCIA_CARRERA, TELE_AUTO_DISTANCIA_VUELTA, TELE_AUTO_TIEMPO_VUELTA, TELE_AUTO_POSICION, TELE_AUTO_VELOCIDAD, TELE_AUTO_COMBUSTIBLE FROM GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.escuderia ON GD1C2022.gd_esquema.Maestra.ESCUDERIA_NOMBRE = AJO_DER.escuderia.nombre
-		JOIN AJO_DER.auto ON GD1C2022.gd_esquema.Maestra.AUTO_NUMERO = AJO_DER.auto.numero_auto
-		JOIN AJO_DER.carrera ON GD1C2022.gd_esquema.Maestra.CODIGO_CARRERA = AJO_DER.carrera.codigo
-		JOIN AJO_DER.sector ON GD1C2022.gd_esquema.Maestra.CODIGO_SECTOR = AJO_DER.sector.codigo
-		GROUP BY AJO_DER.auto.id, AJO_DER.carrera.id, AJO_DER.sector.id, TELE_AUTO_NUMERO_VUELTA, TELE_AUTO_DISTANCIA_CARRERA, TELE_AUTO_DISTANCIA_VUELTA, TELE_AUTO_TIEMPO_VUELTA, TELE_AUTO_POSICION, TELE_AUTO_VELOCIDAD, TELE_AUTO_COMBUSTIBLE
-		ORDER BY AJO_DER.carrera.id, AJO_DER.auto.id, TELE_AUTO_DISTANCIA_CARRERA
+	SELECT DISTINCT auto.id, carrera.id, sector.id, TELE_AUTO_NUMERO_VUELTA, TELE_AUTO_DISTANCIA_CARRERA, TELE_AUTO_DISTANCIA_VUELTA, TELE_AUTO_TIEMPO_VUELTA, TELE_AUTO_POSICION, TELE_AUTO_VELOCIDAD, TELE_AUTO_COMBUSTIBLE FROM GD1C2022.gd_esquema.Maestra
+		JOIN escuderia ON GD1C2022.gd_esquema.Maestra.ESCUDERIA_NOMBRE = escuderia.nombre
+		JOIN auto ON GD1C2022.gd_esquema.Maestra.AUTO_NUMERO = auto.numero_auto
+		JOIN carrera ON GD1C2022.gd_esquema.Maestra.CODIGO_CARRERA = carrera.codigo
+		JOIN sector ON GD1C2022.gd_esquema.Maestra.CODIGO_SECTOR = sector.codigo
+		GROUP BY auto.id, carrera.id, sector.id, TELE_AUTO_NUMERO_VUELTA, TELE_AUTO_DISTANCIA_CARRERA, TELE_AUTO_DISTANCIA_VUELTA, TELE_AUTO_TIEMPO_VUELTA, TELE_AUTO_POSICION, TELE_AUTO_VELOCIDAD, TELE_AUTO_COMBUSTIBLE
+		ORDER BY carrera.id, auto.id, TELE_AUTO_DISTANCIA_CARRERA
 END
 GO
 
@@ -521,18 +542,18 @@ GO
 CREATE PROCEDURE migrar_parada_box
 AS
 BEGIN
-	INSERT INTO AJO_DER.parada_box(
+	INSERT INTO parada_box(
 		id_carrera,
 		id_auto,
 		numero_vuelta,
 		tiempo_parada
 	)
-	SELECT DISTINCT AJO_DER.carrera.id, AJO_DER.auto.id, PARADA_BOX_VUELTA, PARADA_BOX_TIEMPO FROM GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.carrera ON GD1C2022.gd_esquema.Maestra.CODIGO_CARRERA = AJO_DER.carrera.codigo
-		JOIN AJO_DER.escuderia ON GD1C2022.gd_esquema.Maestra.ESCUDERIA_NOMBRE = AJO_DER.escuderia.nombre
-		JOIN AJO_DER.auto ON GD1C2022.gd_esquema.Maestra.AUTO_NUMERO = AJO_DER.auto.numero_auto
-		GROUP BY AJO_DER.carrera.id, AJO_DER.auto.id, PARADA_BOX_VUELTA, PARADA_BOX_TIEMPO
-		ORDER BY AJO_DER.carrera.id, AJO_DER.auto.id, PARADA_BOX_VUELTA
+	SELECT DISTINCT carrera.id, auto.id, PARADA_BOX_VUELTA, PARADA_BOX_TIEMPO FROM GD1C2022.gd_esquema.Maestra
+		JOIN carrera ON GD1C2022.gd_esquema.Maestra.CODIGO_CARRERA = carrera.codigo
+		JOIN escuderia ON GD1C2022.gd_esquema.Maestra.ESCUDERIA_NOMBRE = escuderia.nombre
+		JOIN auto ON GD1C2022.gd_esquema.Maestra.AUTO_NUMERO = auto.numero_auto
+		GROUP BY carrera.id, auto.id, PARADA_BOX_VUELTA, PARADA_BOX_TIEMPO
+		ORDER BY carrera.id, auto.id, PARADA_BOX_VUELTA
 END
 GO
 
@@ -799,26 +820,11 @@ END
 GO
 
 
-=======
-END
-GO
-
 ---------------
 -- EJECUCION --
 ---------------
-EXEC eliminar_tablas
 
--- Eliminacion de esquema
-IF EXISTS (SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'AJO_DER')
-    DROP SCHEMA AJO_DER
-GO
-
--- Creacion de esquema
-CREATE SCHEMA AJO_DER;
-GO
-
-EXEC borrar_tablas
-EXEC borar_procedures
-EXEC crear_tablas
 EXEC migrar_tablas
+
+DROP PROCEDURE migrar_tablas
 
