@@ -2,23 +2,26 @@ USE GD1C2022
 GO
 
 -- Eliminacion de tablas
-	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'parada_box')
-		DROP TABLE AJO_DER.parada_box
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'medicion')
+		DROP TABLE AJO_DER.medicion
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'estado_de_motor')
+		DROP TABLE AJO_DER.estado_de_motor
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'estado_de_caja_de_cambios')
+		DROP TABLE AJO_DER.estado_de_caja_de_cambios
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'estado_freno')
+		DROP TABLE AJO_DER.estado_freno
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'estado_neumatico')
+		DROP TABLE AJO_DER.estado_neumatico
 
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'cambio_neumaticos')
 		DROP TABLE AJO_DER.cambio_neumaticos
 
-	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'auto')
-		DROP TABLE AJO_DER.auto
-
-	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'posicion')
-		DROP TABLE AJO_DER.posicion
-
-	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'escuderia')
-		DROP TABLE AJO_DER.escuderia
-
-	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'piloto')
-		DROP TABLE AJO_DER.piloto
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'parada_box')
+		DROP TABLE AJO_DER.parada_box
 
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'motor')
 		DROP TABLE AJO_DER.motor
@@ -32,17 +35,14 @@ GO
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'neumatico')
 		DROP TABLE AJO_DER.neumatico
 
-	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'estado_de_motor')
-		DROP TABLE AJO_DER.estado_de_motor
-
-	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'estado_de_caja_de_cambios')
-		DROP TABLE AJO_DER.estado_de_caja_de_cambios
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'incidente_auto')
+		DROP TABLE AJO_DER.incidente_auto
 
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'incidente')
 		DROP TABLE AJO_DER.incidente
 
-	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'incidente_auto')
-		DROP TABLE AJO_DER.incidente_auto
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'carrera')
+		DROP TABLE AJO_DER.carrera
 
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'sector')
 		DROP TABLE AJO_DER.sector
@@ -50,17 +50,19 @@ GO
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'circuito')
 		DROP TABLE AJO_DER.circuito
 
-	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'medicion')
-		DROP TABLE AJO_DER.medicion
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'auto')
+		DROP TABLE AJO_DER.auto
 
-	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'carrera')
-		DROP TABLE AJO_DER.carrera
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'escuderia')
+		DROP TABLE AJO_DER.escuderia
 
-	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'estado_freno')
-		DROP TABLE AJO_DER.estado_freno
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'piloto')
+		DROP TABLE AJO_DER.piloto
 
-	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'estado_neumatico')
-		DROP TABLE AJO_DER.estado_neumatico
+
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'posicion')
+		DROP TABLE AJO_DER.posicion
 
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'tipo_neumatico')
 		DROP TABLE AJO_DER.tipo_neumatico
@@ -903,34 +905,34 @@ GO
 CREATE PROCEDURE AJO_DER.migrar_tablas
 AS
 BEGIN
-	EXEC migrar_tipo_sector
-	EXEC migrar_pais
-	EXEC migrar_tipo_incidente
-	EXEC migrar_bandera
-	EXEC migrar_escuderia
-	EXEC migrar_piloto
-	EXEC migrar_auto
-	EXEC migrar_incidente
-	EXEC migrar_incidente_auto
-	EXEC migrar_circuito
-	EXEC migrar_sector
-	EXEC migrar_carrera
-	EXEC migrar_medicion
-	EXEC migrar_parada_box
-	EXEC migrar_motores;
-	EXEC migrar_estado_de_motor;
-	EXEC migrar_caja_de_cambios;
-	EXEC migrar_estado_de_caja_de_cambios;
-	EXEC migrar_frenos;
-	EXEC migrar_estado_de_freno_1;
-	EXEC migrar_estado_de_freno_2;
-	EXEC migrar_estado_de_freno_3;
-	EXEC migrar_estado_de_freno_4;
-	EXEC migrar_tipo_neumatico;
-	EXEC migrar_neumaticos_1;
-	EXEC migrar_neumaticos_2;
-	EXEC migrar_neumaticos_3;
-	EXEC migrar_neumaticos_4;
+	EXEC AJO_DER.migrar_tipo_sector
+	EXEC AJO_DER.migrar_pais
+	EXEC AJO_DER.migrar_tipo_incidente
+	EXEC AJO_DER.migrar_bandera
+	EXEC AJO_DER.migrar_escuderia
+	EXEC AJO_DER.migrar_piloto
+	EXEC AJO_DER.migrar_auto
+	EXEC AJO_DER.migrar_incidente
+	EXEC AJO_DER.migrar_incidente_auto
+	EXEC AJO_DER.migrar_circuito
+	EXEC AJO_DER.migrar_sector
+	EXEC AJO_DER.migrar_carrera
+	EXEC AJO_DER.migrar_medicion
+	EXEC AJO_DER.migrar_parada_box
+	EXEC AJO_DER.migrar_motores;
+	EXEC AJO_DER.migrar_estado_de_motor;
+	EXEC AJO_DER.migrar_caja_de_cambios;
+	EXEC AJO_DER.migrar_estado_de_caja_de_cambios;
+	EXEC AJO_DER.migrar_frenos;
+	EXEC AJO_DER.migrar_estado_de_freno_1;
+	EXEC AJO_DER.migrar_estado_de_freno_2;
+	EXEC AJO_DER.migrar_estado_de_freno_3;
+	EXEC AJO_DER.migrar_estado_de_freno_4;
+	EXEC AJO_DER.migrar_tipo_neumatico;
+	EXEC AJO_DER.migrar_neumaticos_1;
+	EXEC AJO_DER.migrar_neumaticos_2;
+	EXEC AJO_DER.migrar_neumaticos_3;
+	EXEC AJO_DER.migrar_neumaticos_4;
 END
 GO
 
