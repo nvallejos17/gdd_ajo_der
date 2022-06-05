@@ -231,14 +231,14 @@ GO
   );
 
   CREATE TABLE AJO_DER.caja_de_cambios (
-      id INT NOT NULL IDENTITY PRIMARY KEY,
+    id INT NOT NULL IDENTITY PRIMARY KEY,
     id_auto INT, -- FK
     modelo NVARCHAR(255),
     numero_serie NVARCHAR(255)
   );
 
   CREATE TABLE AJO_DER.freno (
-      id INT NOT NULL IDENTITY PRIMARY KEY,
+    id INT NOT NULL IDENTITY PRIMARY KEY,
     id_auto INT, -- FK
     numero_serie NVARCHAR(255)
   );
@@ -251,7 +251,7 @@ GO
   );
 
   CREATE TABLE AJO_DER.tipo_neumatico (
-      id INT NOT NULL IDENTITY PRIMARY KEY,
+    id INT NOT NULL IDENTITY PRIMARY KEY,
     tipo VARCHAR(255)
   );
 
@@ -679,9 +679,10 @@ AS
 BEGIN 	
 		INSERT INTO AJO_DER.motor(
 			modelo,
+			id_auto,
 			numero_serie
 		)
-		SELECT DISTINCT TELE_MOTOR_MODELO,TELE_MOTOR_NRO_SERIE from [GD1C2022].[gd_esquema].[Maestra] 
+		SELECT DISTINCT TELE_MOTOR_MODELO,TELE_AUTO_CODIGO,TELE_MOTOR_NRO_SERIE from [GD1C2022].[gd_esquema].[Maestra] 
 		where TELE_MOTOR_NRO_SERIE is not null
 END
 GO
@@ -704,9 +705,11 @@ CREATE PROCEDURE AJO_DER.migrar_caja_de_cambios
 AS
 BEGIN 	
 		INSERT INTO AJO_DER.caja_de_cambios(
-			modelo,numero_serie
+			modelo,
+			id_auto,
+			numero_serie
 		)
-		Select DISTINCT TELE_CAJA_MODELO,TELE_CAJA_NRO_SERIE from [GD1C2022].[gd_esquema].[Maestra] where TELE_CAJA_NRO_SERIE is not null
+		Select DISTINCT TELE_CAJA_MODELO,TELE_AUTO_CODIGO,TELE_CAJA_NRO_SERIE from [GD1C2022].[gd_esquema].[Maestra] where TELE_CAJA_NRO_SERIE is not null
 END
 GO
 CREATE PROCEDURE AJO_DER.migrar_estado_de_caja_de_cambios
@@ -727,31 +730,35 @@ CREATE PROCEDURE AJO_DER.migrar_frenos
 AS
 BEGIN 	
 		INSERT INTO AJO_DER.freno(
-			numero_serie
+			numero_serie,
+			id_auto
 		)
-		SELECT DISTINCT TELE_FRENO1_NRO_SERIE from [GD1C2022].[gd_esquema].[Maestra] where TELE_FRENO1_NRO_SERIE is not null
+		SELECT DISTINCT TELE_FRENO1_NRO_SERIE,TELE_AUTO_CODIGO from [GD1C2022].[gd_esquema].[Maestra] where TELE_FRENO1_NRO_SERIE is not null
 
 		INSERT INTO AJO_DER.freno(
-			numero_serie
+			numero_serie,
+			id_auto
 		)
-		SELECT DISTINCT TELE_FRENO2_NRO_SERIE from [GD1C2022].[gd_esquema].[Maestra] where TELE_FRENO3_NRO_SERIE is not null
+		SELECT DISTINCT TELE_FRENO2_NRO_SERIE,TELE_AUTO_CODIGO from [GD1C2022].[gd_esquema].[Maestra] where TELE_FRENO2_NRO_SERIE is not null
 
 		INSERT INTO AJO_DER.freno(
-			numero_serie
+			numero_serie,
+			id_auto
 		)
-		SELECT DISTINCT TELE_FRENO3_NRO_SERIE from [GD1C2022].[gd_esquema].[Maestra] where TELE_FRENO3_NRO_SERIE is not null
+		SELECT DISTINCT TELE_FRENO3_NRO_SERIE,TELE_AUTO_CODIGO from [GD1C2022].[gd_esquema].[Maestra] where TELE_FRENO3_NRO_SERIE is not null
 
 		INSERT INTO AJO_DER.freno(
-			numero_serie
+			numero_serie,
+			id_auto
 		)
-		SELECT DISTINCT TELE_FRENO4_NRO_SERIE from [GD1C2022].[gd_esquema].[Maestra] where TELE_FRENO4_NRO_SERIE is not null
+		SELECT DISTINCT TELE_FRENO4_NRO_SERIE,TELE_AUTO_CODIGO from [GD1C2022].[gd_esquema].[Maestra] where TELE_FRENO4_NRO_SERIE is not null
 END
 GO
 CREATE PROCEDURE AJO_DER.migrar_estado_de_freno_1
 AS
 BEGIN 	
 		INSERT INTO AJO_DER.estado_freno(
-			id_freno,
+			id_freno,			
 			grosor_pastilla,
 			id_posicion,
 			tamanio_disco,
@@ -822,12 +829,12 @@ AS
 BEGIN 	
 		INSERT INTO AJO_DER.neumatico(
 			numero_serie,
+			id_auto,
 			id_tipo_neumatico
 		)
 		SELECT DISTINCT NEUMATICO1_NRO_SERIE_NUEVO,AJO_DER.tipo_neumatico.id from [GD1C2022].[gd_esquema].[Maestra]
 		JOIN AJO_DER.tipo_neumatico ON [GD1C2022].[gd_esquema].[Maestra].NEUMATICO1_TIPO_NUEVO = AJO_DER.tipo_neumatico.tipo
 		group by NEUMATICO1_NRO_SERIE_NUEVO,AJO_DER.tipo_neumatico.id
-
 		INSERT INTO AJO_DER.neumatico(
 			numero_serie,
 			id_tipo_neumatico
