@@ -1,4 +1,17 @@
 USE GD1C2022
+
+IF OBJECT_ID('eliminar_tablas') IS NOT NULL DROP PROCEDURE eliminar_tablas
+IF OBJECT_ID('crear_tablas') IS NOT NULL DROP PROCEDURE crear_tablas
+IF OBJECT_ID('migrar_tipo_sector') IS NOT NULL DROP PROCEDURE migrar_tipo_sector
+IF OBJECT_ID('migrar_pais') IS NOT NULL DROP PROCEDURE migrar_pais
+IF OBJECT_ID('migrar_circuito') IS NOT NULL DROP PROCEDURE migrar_circuito
+IF OBJECT_ID('migrar_sector') IS NOT NULL DROP PROCEDURE migrar_sector
+IF OBJECT_ID('migrar_carrera') IS NOT NULL DROP PROCEDURE migrar_carrera
+IF OBJECT_ID('migrar_medicion') IS NOT NULL DROP PROCEDURE migrar_medicion
+IF OBJECT_ID('migrar_parada_box') IS NOT NULL DROP PROCEDURE migrar_parada_box
+-- IF OBJECT_ID('migrar_cambio_neumaticos') IS NOT NULL DROP PROCEDURE migrar_cambio_neumaticos
+IF OBJECT_ID('migrar_tablas') IS NOT NULL DROP PROCEDURE migrar_tablas
+
 GO
 
 -- Eliminacion de tablas
