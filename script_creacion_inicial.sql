@@ -32,20 +32,11 @@ GO
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'neumatico')
 		DROP TABLE neumatico
 
-	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'tipo_neumatico')
-		DROP TABLE tipo_neumatico
-
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'estado_de_motor')
 		DROP TABLE estado_de_motor
 
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'estado_de_caja_de_cambios')
 		DROP TABLE estado_de_caja_de_cambios
-
-	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'bandera')
-		DROP TABLE bandera
-
-	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'tipo_incidente')
-		DROP TABLE tipo_incidente
 
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'incidente')
 		DROP TABLE incidente
@@ -55,12 +46,6 @@ GO
 
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'sector')
 		DROP TABLE sector
-
-	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'tipo_sector')
-		DROP TABLE tipo_sector
-
-	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'pais')
-		DROP TABLE pais
 
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'circuito')
 		DROP TABLE circuito
@@ -77,8 +62,43 @@ GO
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'estado_neumatico')
 		DROP TABLE estado_neumatico
 
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'tipo_neumatico')
+		DROP TABLE tipo_neumatico
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'bandera')
+		DROP TABLE bandera
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'tipo_incidente')
+		DROP TABLE tipo_incidente
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'tipo_sector')
+		DROP TABLE tipo_sector
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'pais')
+		DROP TABLE pais
 
 -- Eliminacion de store procedure
+	IF OBJECT_ID('migrar_escuderia', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_escuderia
+
+	IF OBJECT_ID('migrar_piloto', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_piloto
+
+	IF OBJECT_ID('migrar_auto', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_auto
+
+	IF OBJECT_ID('migrar_tipo_incidente', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_tipo_incidente
+
+	IF OBJECT_ID('migrar_bandera', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_bandera
+
+	IF OBJECT_ID('migrar_incidente', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_incidente
+
+	IF OBJECT_ID('migrar_incidente_auto', 'P') IS NOT NULL
+		DROP PROCEDURE migrar_incidente_auto
+
 	IF OBJECT_ID('migrar_tipo_sector', 'P') IS NOT NULL
 		DROP PROCEDURE migrar_tipo_sector
 
@@ -158,10 +178,10 @@ GO
 
 -- Creacion de tablas
   CREATE TABLE parada_box (
-      id INT NOT NULL IDENTITY PRIMARY KEY,
+    id INT NOT NULL IDENTITY PRIMARY KEY,
     id_carrera INT, -- FK
-      id_auto INT, -- FK
-      numero_vuelta DECIMAL(18,0),
+    id_auto INT, -- FK
+    numero_vuelta DECIMAL(18,0),
     tiempo_parada DECIMAL(18,2)
   );
 
@@ -198,11 +218,6 @@ GO
       nombre VARCHAR(10),
     apellido VARCHAR(10),
     fecha_nacimiento DATETIME
-  );
-
-  CREATE TABLE nacionalidad (
-      id INT NOT NULL IDENTITY PRIMARY KEY,
-      nombre VARCHAR(50)
   );
 
   CREATE TABLE motor (
@@ -272,11 +287,11 @@ GO
     id_carrera INT, -- FK
     id_sector INT, -- FK
     id_bandera INT, -- FK
-    tiempo DECIMAL,
-    fecha DATETIME
+    tiempo DECIMAL(18,2),
   );
 
   CREATE TABLE incidente_auto (
+	id INT NOT NULL IDENTITY PRIMARY KEY,
     id_incidente INT, -- FK
     id_auto INT, -- FK
     id_tipo_incidente INT, -- FK
@@ -370,13 +385,10 @@ GO
 	-- N/A
 
 	-- FKs de escuderia
-	ALTER TABLE escuderia ADD FOREIGN KEY(id_nacionalidad) REFERENCES nacionalidad(id);
+	ALTER TABLE escuderia ADD FOREIGN KEY(id_nacionalidad) REFERENCES pais(id);
 
 	-- FKs de piloto
-	ALTER TABLE piloto ADD FOREIGN KEY(id_nacionalidad) REFERENCES nacionalidad(id);
-
-	-- FKs de nacionalidad
-	-- N/A
+	ALTER TABLE piloto ADD FOREIGN KEY(id_nacionalidad) REFERENCES pais(id);
 
 	-- FKs de motor
 	ALTER TABLE motor ADD FOREIGN KEY(id_auto) REFERENCES auto(id);
@@ -463,11 +475,107 @@ GO
 -- Migrar pais
 CREATE PROCEDURE migrar_pais
 AS
-BEGIN
-	INSERT INTO pais
-	SELECT DISTINCT CIRCUITO_PAIS FROM GD1C2022.gd_esquema.Maestra
-		WHERE CIRCUITO_PAIS IS NOT NULL
-END
+	BEGIN
+		INSERT INTO pais
+		SELECT DISTINCT upper(ESCUDERIA_NACIONALIDAD)
+		FROM GD1C2022.gd_esquema.Maestra
+		WHERE ESCUDERIA_NACIONALIDAD IS NOT NULL
+
+		INSERT INTO pais
+		SELECT DISTINCT PILOTO_NACIONALIDAD
+		FROM GD1C2022.gd_esquema.Maestra
+		WHERE PILOTO_NACIONALIDAD IS NOT NULL 
+		AND PILOTO_NACIONALIDAD NOT IN (SELECT nombre FROM pais)
+
+		INSERT INTO pais
+		SELECT DISTINCT CIRCUITO_PAIS
+		FROM GD1C2022.gd_esquema.Maestra
+		WHERE CIRCUITO_PAIS IS NOT NULL 
+		AND CIRCUITO_PAIS NOT IN (SELECT nombre FROM pais)
+	END
+GO
+
+CREATE PROCEDURE migrar_tipo_incidente
+AS
+	BEGIN
+		INSERT INTO tipo_incidente 
+		SELECT DISTINCT INCIDENTE_TIPO
+		FROM GD1C2022.gd_esquema.Maestra
+		WHERE INCIDENTE_TIPO IS NOT NULL
+	END
+GO
+
+CREATE PROCEDURE migrar_bandera
+AS
+	BEGIN
+		INSERT INTO bandera 
+		SELECT DISTINCT INCIDENTE_BANDERA
+		FROM GD1C2022.gd_esquema.Maestra
+		WHERE INCIDENTE_BANDERA IS NOT NULL
+	END
+GO
+
+CREATE PROCEDURE migrar_escuderia
+AS
+	BEGIN
+		INSERT INTO escuderia
+		SELECT DISTINCT ESCUDERIA_NOMBRE, pais.id
+		FROM GD1C2022.gd_esquema.Maestra
+		JOIN pais ON upper(ESCUDERIA_NACIONALIDAD) = pais.nombre
+		WHERE ESCUDERIA_NOMBRE IS NOT NULL
+	END
+GO
+
+CREATE PROCEDURE migrar_piloto
+AS
+	BEGIN
+		INSERT INTO piloto
+		SELECT DISTINCT PILOTO_NOMBRE, PILOTO_APELLIDO, pais.id, PILOTO_FECHA_NACIMIENTO
+		FROM GD1C2022.gd_esquema.Maestra
+		JOIN pais ON PILOTO_NACIONALIDAD = pais.nombre
+		WHERE PILOTO_NOMBRE IS NOT NULL
+	END
+GO
+
+CREATE PROCEDURE migrar_auto
+AS
+	BEGIN
+		INSERT INTO auto
+		SELECT DISTINCT escuderia.id, piloto.id, AUTO_NUMERO, AUTO_MODELO
+		FROM GD1C2022.gd_esquema.Maestra
+		JOIN escuderia ON ESCUDERIA_NOMBRE = escuderia.nombre
+		JOIN piloto ON PILOTO_NOMBRE = piloto.nombre AND PILOTO_APELLIDO = piloto.apellido
+		WHERE PILOTO_NOMBRE IS NOT NULL
+	END
+GO
+
+CREATE PROCEDURE migrar_incidente
+AS
+	BEGIN
+		INSERT INTO incidente
+		SELECT DISTINCT carrera.id, sector.id, bandera.id, INCIDENTE_TIEMPO
+		FROM GD1C2022.gd_esquema.Maestra
+		JOIN carrera ON CODIGO_CARRERA = carrera.codigo
+		JOIN sector ON CODIGO_SECTOR = sector.codigo
+		JOIN bandera ON INCIDENTE_BANDERA = bandera.color
+		WHERE INCIDENTE_TIEMPO IS NOT NULL
+	END
+GO
+
+CREATE PROCEDURE migrar_incidente_auto
+AS
+	BEGIN
+		INSERT INTO incidente_auto
+		SELECT DISTINCT incidente.id, auto.id, tipo_incidente.id, INCIDENTE_NUMERO_VUELTA
+		FROM GD1C2022.gd_esquema.Maestra
+		JOIN carrera ON CODIGO_CARRERA = carrera.id
+		JOIN incidente ON carrera.id = incidente.id_carrera 
+		JOIN piloto ON PILOTO_NOMBRE = piloto.nombre AND PILOTO_APELLIDO = piloto.apellido
+		JOIN auto ON piloto.id = auto.id_piloto
+		JOIN tipo_incidente ON INCIDENTE_TIPO = tipo_incidente.tipo
+		WHERE INCIDENTE_TIEMPO IS NOT NULL
+		AND INCIDENTE_TIEMPO = incidente.tiempo
+	END
 GO
 
 -- Migrar circuito
@@ -797,6 +905,13 @@ AS
 BEGIN
 	EXEC migrar_tipo_sector
 	EXEC migrar_pais
+	EXEC migrar_tipo_incidente
+	EXEC migrar_bandera
+	EXEC migrar_escuderia
+	EXEC migrar_piloto
+	EXEC migrar_auto
+	EXEC migrar_incidente
+	EXEC migrar_incidente_auto
 	EXEC migrar_circuito
 	EXEC migrar_sector
 	EXEC migrar_carrera
