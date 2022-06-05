@@ -806,4 +806,7 @@ BEGIN
 END
 GO
 
+EXEC borrar_tablas
+EXEC borar_procedures
+EXEC crear_tablas
 EXEC iniciar_migracion_de_tablas;
