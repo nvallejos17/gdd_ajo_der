@@ -206,7 +206,7 @@ GO
 
   CREATE TABLE AJO_DER.posicion (
       id INT NOT NULL IDENTITY PRIMARY KEY,
-    descripcion VARCHAR(10)
+    descripcion VARCHAR(255)
   );
 
   CREATE TABLE AJO_DER.escuderia (
@@ -259,9 +259,9 @@ GO
       id INT NOT NULL IDENTITY PRIMARY KEY,
     id_medicion INT, -- FK
     id_motor INT, -- FK
-    potencia DECIMAL,
-    temperatura_aceite DECIMAL,
-    temperatura_agua DECIMAL,
+    potencia DECIMAL(18,6),
+    temperatura_aceite DECIMAL(18,6),
+    temperatura_agua DECIMAL(18,6),
     rpm INT
   );
 
@@ -269,10 +269,9 @@ GO
       id INT NOT NULL IDENTITY PRIMARY KEY,
     id_medicion INT, -- FK
     id_caja_de_cambios INT, -- FK
-    temperatura_aceite DECIMAL,
-    temperatura_agua DECIMAL,
+    temperatura_aceite DECIMAL(18,2),
     rpm INT,
-    desgaste DECIMAL
+    desgaste DECIMAL(18,2)
   );
 
   CREATE TABLE AJO_DER.bandera (
@@ -355,8 +354,8 @@ GO
     id_medicion INT, -- FK
     id_freno INT, -- FK
     id_posicion INT, -- FK
-    grosor_pastilla DECIMAL,
-    temperatura DECIMAL
+    grosor_pastilla DECIMAL(18,2),
+    temperatura DECIMAL(18,2)
   );
 
   CREATE TABLE AJO_DER.estado_neumatico (
@@ -364,9 +363,9 @@ GO
     id_medicion INT, -- FK
     id_neumatico INT, -- FK
     id_posicion INT, -- FK
-    profundidad DECIMAL,
-    presion DECIMAL,
-    temperatura DECIMAL
+    profundidad DECIMAL(18,6),
+    presion DECIMAL(18,6),
+    temperatura DECIMAL(18,6)
   );
 
 
