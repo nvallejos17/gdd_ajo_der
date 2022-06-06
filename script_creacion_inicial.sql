@@ -706,7 +706,8 @@ BEGIN
 			id_auto,
 			numero_serie
 		)
-		SELECT DISTINCT TELE_MOTOR_MODELO,TELE_AUTO_CODIGO,TELE_MOTOR_NRO_SERIE from [GD1C2022].[gd_esquema].[Maestra] 
+		SELECT DISTINCT TELE_MOTOR_MODELO,auto.id,TELE_MOTOR_NRO_SERIE from [GD1C2022].[gd_esquema].[Maestra] 
+		JOIN AJO_DER.auto ON GD1C2022.gd_esquema.Maestra.AUTO_NUMERO = auto.numero_auto
 		where TELE_MOTOR_NRO_SERIE is not null
 END
 GO
@@ -714,15 +715,20 @@ CREATE PROCEDURE AJO_DER.migrar_estado_de_motor
 AS
 BEGIN 	
 		INSERT INTO AJO_DER.estado_de_motor(
-			id_motor,
+			id_motor,	
+			id_medicion,
 			potencia,
 			temperatura_aceite,
 			temperatura_agua,
 			rpm
 		)
-		SELECT id,TELE_MOTOR_POTENCIA,TELE_MOTOR_TEMP_ACEITE,TELE_MOTOR_TEMP_AGUA,TELE_MOTOR_RPM from [GD1C2022].[gd_esquema].[Maestra]
-		JOIN AJO_DER.motor ON [GD1C2022].[gd_esquema].[Maestra].TELE_MOTOR_NRO_SERIE = AJO_DER.motor.numero_serie
-		group by id,TELE_MOTOR_POTENCIA,TELE_MOTOR_TEMP_ACEITE,TELE_MOTOR_TEMP_AGUA,TELE_MOTOR_RPM
+		SELECT AJO_DER.motor.id,AJO_DER.medicion.id,TELE_MOTOR_POTENCIA,TELE_MOTOR_TEMP_ACEITE,TELE_MOTOR_TEMP_AGUA,TELE_MOTOR_RPM from [GD1C2022].[gd_esquema].[Maestra]
+		JOIN AJO_DER.motor ON GD1C2022.gd_esquema.Maestra.TELE_MOTOR_NRO_SERIE = AJO_DER.motor.numero_serie				
+		JOIN AJO_DER.piloto ON GD1C2022.gd_esquema.Maestra.PILOTO_NOMBRE = 	AJO_DER.piloto.nombre AND GD1C2022.gd_esquema.Maestra.PILOTO_APELLIDO =	AJO_DER.piloto.apellido
+		JOIN AJO_DER.auto ON AJO_DER.auto.id_piloto = AJO_DER.piloto.id			
+		JOIN AJO_DER.medicion ON AJO_DER.medicion.id_auto = AJO_DER.auto.id			 
+		
+		
 END
 GO
 CREATE PROCEDURE AJO_DER.migrar_caja_de_cambios
