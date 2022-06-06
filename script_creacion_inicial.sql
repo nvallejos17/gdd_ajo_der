@@ -549,19 +549,30 @@ GO
 CREATE PROCEDURE AJO_DER.migrar_piloto
 AS
 	BEGIN
-		INSERT INTO AJO_DER.piloto
-		SELECT DISTINCT pais.id, PILOTO_NOMBRE, PILOTO_APELLIDO, PILOTO_FECHA_NACIMIENTO
+		INSERT INTO AJO_DER.piloto(
+			apellido,
+			nombre,
+			id_nacionalidad,
+			fecha_nacimiento
+		)
+		SELECT DISTINCT PILOTO_APELLIDO, PILOTO_NOMBRE, pais.id, PILOTO_FECHA_NACIMIENTO
 		FROM GD1C2022.gd_esquema.Maestra
 		JOIN AJO_DER.pais ON PILOTO_NACIONALIDAD = pais.nombre
 		WHERE PILOTO_NOMBRE IS NOT NULL
+		ORDER BY PILOTO_APELLIDO
 	END
 GO
 
 CREATE PROCEDURE AJO_DER.migrar_auto
 AS
 	BEGIN
-		INSERT INTO AJO_DER.auto
-		SELECT DISTINCT escuderia.id, piloto.id, AUTO_NUMERO, AUTO_MODELO FROM GD1C2022.gd_esquema.Maestra
+		INSERT INTO AJO_DER.auto(
+			id_piloto,
+			id_escuderia,
+			numero_auto,
+			modelo
+		)
+		SELECT DISTINCT piloto.id, escuderia.id, AUTO_NUMERO, AUTO_MODELO FROM GD1C2022.gd_esquema.Maestra
 		JOIN AJO_DER.escuderia ON ESCUDERIA_NOMBRE = escuderia.nombre
 		JOIN AJO_DER.piloto ON PILOTO_NOMBRE = piloto.nombre AND PILOTO_APELLIDO = piloto.apellido
 		WHERE PILOTO_NOMBRE IS NOT NULL
@@ -600,10 +611,13 @@ GO
 CREATE PROCEDURE AJO_DER.migrar_circuito
 AS
 	BEGIN
-		INSERT INTO AJO_DER.circuito
-		SELECT DISTINCT pais.id, CIRCUITO_CODIGO, CIRCUITO_NOMBRE FROM GD1C2022.gd_esquema.Maestra
+		INSERT INTO AJO_DER.circuito(
+			codigo,
+			id_pais,
+			nombre
+		)
+		SELECT DISTINCT CIRCUITO_CODIGO, pais.id, CIRCUITO_NOMBRE FROM GD1C2022.gd_esquema.Maestra
 		JOIN AJO_DER.pais ON GD1C2022.gd_esquema.Maestra.CIRCUITO_PAIS = pais.nombre
-		GROUP BY pais.id, CIRCUITO_CODIGO, CIRCUITO_NOMBRE
 		ORDER BY CIRCUITO_CODIGO
 	END
 GO
@@ -613,17 +627,16 @@ CREATE PROCEDURE AJO_DER.migrar_sector
 AS
 	BEGIN
 		INSERT INTO AJO_DER.sector(
+			codigo,
 			id_circuito,
 			id_tipo_sector,
-			distancia,
-			codigo
+			distancia
 		)
-		SELECT DISTINCT circuito.id, tipo_sector.id, SECTOR_DISTANCIA, CODIGO_SECTOR
+		SELECT DISTINCT CODIGO_SECTOR, circuito.id, tipo_sector.id, SECTOR_DISTANCIA
 		FROM GD1C2022.gd_esquema.Maestra
 		JOIN AJO_DER.circuito ON GD1C2022.gd_esquema.Maestra.CIRCUITO_CODIGO = circuito.codigo
 		JOIN AJO_DER.tipo_sector ON GD1C2022.gd_esquema.Maestra.SECTO_TIPO = tipo_sector.tipo
-		GROUP BY circuito.id, tipo_sector.id, SECTOR_DISTANCIA, CODIGO_SECTOR
-		ORDER BY circuito.id, CODIGO_SECTOR, tipo_sector.id
+		ORDER BY CODIGO_SECTOR
 	END
 GO
 
@@ -631,10 +644,16 @@ GO
 CREATE PROCEDURE AJO_DER.migrar_carrera
 AS
 	BEGIN
-		INSERT INTO AJO_DER.carrera
-		SELECT DISTINCT circuito.id, CARRERA_CANT_VUELTAS, CARRERA_FECHA, CODIGO_CARRERA, CARRERA_CLIMA, CARRERA_TOTAL_CARRERA FROM GD1C2022.gd_esquema.Maestra
+		INSERT INTO AJO_DER.carrera(
+			codigo,
+			id_circuito,
+			cant_vueltas,
+			fecha,
+			clima,
+			total_carrera
+		)
+		SELECT DISTINCT CODIGO_CARRERA, circuito.id, CARRERA_CANT_VUELTAS, CARRERA_FECHA, CARRERA_CLIMA, CARRERA_TOTAL_CARRERA FROM GD1C2022.gd_esquema.Maestra
 		JOIN AJO_DER.circuito ON GD1C2022.gd_esquema.Maestra.CIRCUITO_CODIGO = circuito.codigo
-		GROUP BY circuito.id, CARRERA_CANT_VUELTAS, CARRERA_FECHA, CODIGO_CARRERA, CARRERA_CLIMA, CARRERA_TOTAL_CARRERA
 		ORDER BY CODIGO_CARRERA
 	END
 GO
