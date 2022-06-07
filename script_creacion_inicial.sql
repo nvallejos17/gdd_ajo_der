@@ -2,9 +2,6 @@ USE GD1C2022
 GO
 
 -- Eliminacion de tablas
-	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'medicion')
-		DROP TABLE AJO_DER.medicion
-
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'estado_de_motor')
 		DROP TABLE AJO_DER.estado_de_motor
 
@@ -16,6 +13,9 @@ GO
 
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'estado_neumatico')
 		DROP TABLE AJO_DER.estado_neumatico
+
+	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'medicion')
+		DROP TABLE AJO_DER.medicion
 
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'cambio_neumaticos')
 		DROP TABLE AJO_DER.cambio_neumaticos
@@ -135,17 +135,8 @@ GO
 	IF OBJECT_ID('AJO_DER.migrar_frenos', 'P') IS NOT NULL
 		DROP PROCEDURE AJO_DER.migrar_frenos
 
-	IF OBJECT_ID('AJO_DER.migrar_estado_de_freno_1', 'P') IS NOT NULL
-		DROP PROCEDURE AJO_DER.migrar_estado_de_freno_1
-
-	IF OBJECT_ID('AJO_DER.migrar_estado_de_freno_2', 'P') IS NOT NULL
-		DROP PROCEDURE AJO_DER.migrar_estado_de_freno_2
-
-	IF OBJECT_ID('AJO_DER.migrar_estado_de_freno_3', 'P') IS NOT NULL
-		DROP PROCEDURE AJO_DER.migrar_estado_de_freno_3
-
-	IF OBJECT_ID('AJO_DER.migrar_estado_de_freno_4', 'P') IS NOT NULL
-		DROP PROCEDURE AJO_DER.migrar_estado_de_freno_4
+	IF OBJECT_ID('AJO_DER.migrar_estado_de_freno', 'P') IS NOT NULL
+		DROP PROCEDURE AJO_DER.migrar_estado_de_freno
 
 	IF OBJECT_ID('AJO_DER.migrar_tipo_neumatico', 'P') IS NOT NULL
 		DROP PROCEDURE AJO_DER.migrar_tipo_neumatico
@@ -159,29 +150,11 @@ GO
 	IF OBJECT_ID('AJO_DER.migrar_posiciones', 'P') IS NOT NULL
 		DROP PROCEDURE AJO_DER.migrar_posiciones
 
-	IF OBJECT_ID('AJO_DER.migrar_cambio_neumaticos_anterior_1', 'P') IS NOT NULL
-		DROP PROCEDURE AJO_DER.migrar_cambio_neumaticos_anterior_1
+	IF OBJECT_ID('AJO_DER.migrar_cambio_neumaticos', 'P') IS NOT NULL
+		DROP PROCEDURE AJO_DER.migrar_cambio_neumaticos
 
-	IF OBJECT_ID('AJO_DER.migrar_cambio_neumaticos_anterior_2', 'P') IS NOT NULL
-		DROP PROCEDURE AJO_DER.migrar_cambio_neumaticos_anterior_2
-
-	IF OBJECT_ID('AJO_DER.migrar_cambio_neumaticos_anterior_3', 'P') IS NOT NULL
-		DROP PROCEDURE AJO_DER.migrar_cambio_neumaticos_anterior_3
-
-	IF OBJECT_ID('AJO_DER.migrar_cambio_neumaticos_anterior_4', 'P') IS NOT NULL
-		DROP PROCEDURE AJO_DER.migrar_cambio_neumaticos_anterior_4
-
-	IF OBJECT_ID('AJO_DER.migrar_cambio_neumaticos_nuevo_1', 'P') IS NOT NULL
-		DROP PROCEDURE AJO_DER.migrar_cambio_neumaticos_nuevo_1
-
-	IF OBJECT_ID('AJO_DER.migrar_cambio_neumaticos_nuevo_2', 'P') IS NOT NULL
-		DROP PROCEDURE AJO_DER.migrar_cambio_neumaticos_nuevo_2
-
-	IF OBJECT_ID('AJO_DER.migrar_cambio_neumaticos_nuevo_3', 'P') IS NOT NULL
-		DROP PROCEDURE AJO_DER.migrar_cambio_neumaticos_nuevo_3
-
-	IF OBJECT_ID('AJO_DER.migrar_cambio_neumaticos_nuevo_4', 'P') IS NOT NULL
-		DROP PROCEDURE AJO_DER.migrar_cambio_neumaticos_nuevo_4
+	IF OBJECT_ID('AJO_DER.migrar_estado_neumaticos', 'P') IS NOT NULL
+		DROP PROCEDURE AJO_DER.migrar_estado_neumaticos
 
 -- Eliminacion de esquema
 IF EXISTS (SELECT name FROM sys.schemas WHERE name LIKE 'AJO_DER')
@@ -206,7 +179,6 @@ GO
 		id_parada_box INT, -- FK
 		id_neumatico_anterior INT, -- FK
 		id_neumatico_nuevo INT, -- FK
-		id_posicion INT -- FK
 	);
 
 	CREATE TABLE AJO_DER.auto (
@@ -253,6 +225,7 @@ GO
 	CREATE TABLE AJO_DER.freno (
 		id INT NOT NULL IDENTITY PRIMARY KEY,
 		id_auto INT, -- FK
+		id_posicion INT, -- FK
 		numero_serie NVARCHAR(255),
 		tamanio_disco DECIMAL(18,2)
 	);
@@ -261,6 +234,7 @@ GO
 		id INT NOT NULL IDENTITY PRIMARY KEY,
 		id_auto INT, -- FK
 		id_tipo_neumatico INT, -- FK
+		id_posicion INT, -- FK
 		numero_serie NVARCHAR(255)
 	);
 
@@ -368,7 +342,6 @@ GO
 		id INT NOT NULL IDENTITY PRIMARY KEY,
 		id_medicion INT, -- FK
 		id_freno INT, -- FK
-		id_posicion INT, -- FK
 		grosor_pastilla DECIMAL(18,2),
 		temperatura DECIMAL(18,2)
 	);
@@ -377,7 +350,6 @@ GO
 		id INT NOT NULL IDENTITY PRIMARY KEY,
 		id_medicion INT, -- FK
 		id_neumatico INT, -- FK
-		id_posicion INT, -- FK
 		profundidad DECIMAL(18,6),
 		presion DECIMAL(18,6),
 		temperatura DECIMAL(18,6)
@@ -392,7 +364,6 @@ GO
 	ALTER TABLE AJO_DER.cambio_neumaticos ADD FOREIGN KEY(id_parada_box) REFERENCES AJO_DER.parada_box(id);
 	ALTER TABLE AJO_DER.cambio_neumaticos ADD FOREIGN KEY(id_neumatico_anterior) REFERENCES AJO_DER.neumatico(id);
 	ALTER TABLE AJO_DER.cambio_neumaticos ADD FOREIGN KEY(id_neumatico_nuevo) REFERENCES AJO_DER.neumatico(id);
-	ALTER TABLE AJO_DER.cambio_neumaticos ADD FOREIGN KEY(id_posicion) REFERENCES AJO_DER.posicion(id);
 
 	-- FKs de auto
 	ALTER TABLE AJO_DER.auto ADD FOREIGN KEY(id_escuderia) REFERENCES AJO_DER.escuderia(id);
@@ -415,10 +386,12 @@ GO
 
 	-- FKs de freno
 	ALTER TABLE AJO_DER.freno ADD FOREIGN KEY(id_auto) REFERENCES AJO_DER.auto(id);
+	ALTER TABLE AJO_DER.freno ADD FOREIGN KEY(id_posicion) REFERENCES AJO_DER.posicion(id);
 
 	-- FKs de neumatico
 	ALTER TABLE AJO_DER.neumatico ADD FOREIGN KEY(id_auto) REFERENCES AJO_DER.auto(id);
 	ALTER TABLE AJO_DER.neumatico ADD FOREIGN KEY(id_tipo_neumatico) REFERENCES AJO_DER.tipo_neumatico(id);
+	ALTER TABLE AJO_DER.neumatico ADD FOREIGN KEY(id_posicion) REFERENCES AJO_DER.posicion(id);
 
 	-- FKs de tipo_neumatico
 	-- N/A
@@ -471,12 +444,10 @@ GO
 	-- FKs de estado_freno
 	ALTER TABLE AJO_DER.estado_freno ADD FOREIGN KEY(id_medicion) REFERENCES AJO_DER.medicion(id);
 	ALTER TABLE AJO_DER.estado_freno ADD FOREIGN KEY(id_freno) REFERENCES AJO_DER.freno(id);
-	ALTER TABLE AJO_DER.estado_freno ADD FOREIGN KEY(id_posicion) REFERENCES AJO_DER.posicion(id);
 
 	-- FKs de estado_neumatico
 	ALTER TABLE AJO_DER.estado_neumatico ADD FOREIGN KEY(id_medicion) REFERENCES AJO_DER.medicion(id);
 	ALTER TABLE AJO_DER.estado_neumatico ADD FOREIGN KEY(id_neumatico) REFERENCES AJO_DER.neumatico(id);
-	ALTER TABLE AJO_DER.estado_neumatico ADD FOREIGN KEY(id_posicion) REFERENCES AJO_DER.posicion(id);
 
 GO
 -- Migrar tipo_sector
@@ -534,39 +505,32 @@ AS
 		SELECT DISTINCT ESCUDERIA_NOMBRE, pais.id FROM GD1C2022.gd_esquema.Maestra
 		JOIN AJO_DER.pais ON upper(ESCUDERIA_NACIONALIDAD) = pais.nombre
 		WHERE ESCUDERIA_NOMBRE IS NOT NULL
+		ORDER BY ESCUDERIA_NOMBRE
 	END
 GO
 
 CREATE PROCEDURE AJO_DER.migrar_piloto
 AS
 	BEGIN
-		INSERT INTO AJO_DER.piloto(
-			apellido,
-			nombre,
-			id_nacionalidad,
-			fecha_nacimiento
-		)
-		SELECT DISTINCT PILOTO_APELLIDO, PILOTO_NOMBRE, pais.id, PILOTO_FECHA_NACIMIENTO
+		INSERT INTO AJO_DER.piloto
+		SELECT DISTINCT pais.id, PILOTO_NOMBRE, PILOTO_APELLIDO, PILOTO_FECHA_NACIMIENTO
 		FROM GD1C2022.gd_esquema.Maestra
 		JOIN AJO_DER.pais ON PILOTO_NACIONALIDAD = pais.nombre
 		WHERE PILOTO_NOMBRE IS NOT NULL
-		ORDER BY PILOTO_APELLIDO
+		ORDER BY PILOTO_APELLIDO, PILOTO_NOMBRE
 	END
 GO
 
 CREATE PROCEDURE AJO_DER.migrar_auto
 AS
 	BEGIN
-		INSERT INTO AJO_DER.auto(
-			id_piloto,
-			id_escuderia,
-			numero_auto,
-			modelo
-		)
-		SELECT DISTINCT piloto.id, escuderia.id, AUTO_NUMERO, AUTO_MODELO FROM GD1C2022.gd_esquema.Maestra
+		INSERT INTO AJO_DER.auto
+		SELECT DISTINCT escuderia.id, piloto.id, AUTO_NUMERO, AUTO_MODELO
+		FROM GD1C2022.gd_esquema.Maestra
 		JOIN AJO_DER.escuderia ON ESCUDERIA_NOMBRE = escuderia.nombre
 		JOIN AJO_DER.piloto ON PILOTO_NOMBRE = piloto.nombre AND PILOTO_APELLIDO = piloto.apellido
 		WHERE PILOTO_NOMBRE IS NOT NULL
+		ORDER BY piloto.id, AUTO_NUMERO
 	END
 GO
 
@@ -579,6 +543,7 @@ AS
 		JOIN AJO_DER.sector ON CODIGO_SECTOR = sector.codigo
 		JOIN AJO_DER.bandera ON INCIDENTE_BANDERA = bandera.color
 		WHERE INCIDENTE_TIEMPO IS NOT NULL
+		ORDER BY carrera.id, INCIDENTE_TIEMPO
 	END
 GO
 
@@ -590,11 +555,10 @@ AS
 		FROM GD1C2022.gd_esquema.Maestra
 		JOIN AJO_DER.carrera ON CODIGO_CARRERA = carrera.codigo
 		JOIN AJO_DER.incidente ON carrera.id = incidente.id_carrera 
-		JOIN AJO_DER.piloto ON PILOTO_NOMBRE = piloto.nombre AND PILOTO_APELLIDO = piloto.apellido
-		JOIN AJO_DER.auto ON piloto.id = auto.id_piloto
+		JOIN AJO_DER.auto ON AUTO_MODELO = auto.modelo AND AUTO_NUMERO = auto.numero_auto
 		JOIN AJO_DER.tipo_incidente ON INCIDENTE_TIPO = tipo_incidente.tipo
-		WHERE INCIDENTE_TIEMPO IS NOT NULL
-		AND INCIDENTE_TIEMPO = incidente.tiempo
+		WHERE INCIDENTE_TIEMPO IS NOT NULL AND INCIDENTE_TIEMPO = incidente.tiempo
+		ORDER BY incidente.id
 	END
 GO
 
@@ -602,13 +566,9 @@ GO
 CREATE PROCEDURE AJO_DER.migrar_circuito
 AS
 	BEGIN
-		INSERT INTO AJO_DER.circuito(
-			codigo,
-			id_pais,
-			nombre
-		)
-		SELECT DISTINCT CIRCUITO_CODIGO, pais.id, CIRCUITO_NOMBRE FROM GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.pais ON GD1C2022.gd_esquema.Maestra.CIRCUITO_PAIS = pais.nombre
+		INSERT INTO AJO_DER.circuito
+		SELECT DISTINCT pais.id, CIRCUITO_CODIGO, CIRCUITO_NOMBRE FROM GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.pais ON CIRCUITO_PAIS = pais.nombre
 		ORDER BY CIRCUITO_CODIGO
 	END
 GO
@@ -617,16 +577,11 @@ GO
 CREATE PROCEDURE AJO_DER.migrar_sector
 AS
 	BEGIN
-		INSERT INTO AJO_DER.sector(
-			codigo,
-			id_circuito,
-			id_tipo_sector,
-			distancia
-		)
-		SELECT DISTINCT CODIGO_SECTOR, circuito.id, tipo_sector.id, SECTOR_DISTANCIA
+		INSERT INTO AJO_DER.sector
+		SELECT DISTINCT circuito.id, tipo_sector.id, SECTOR_DISTANCIA, CODIGO_SECTOR
 		FROM GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.circuito ON GD1C2022.gd_esquema.Maestra.CIRCUITO_CODIGO = circuito.codigo
-		JOIN AJO_DER.tipo_sector ON GD1C2022.gd_esquema.Maestra.SECTO_TIPO = tipo_sector.tipo
+		JOIN AJO_DER.circuito ON CIRCUITO_CODIGO = circuito.codigo
+		JOIN AJO_DER.tipo_sector ON SECTO_TIPO = tipo_sector.tipo
 		ORDER BY CODIGO_SECTOR
 	END
 GO
@@ -635,16 +590,10 @@ GO
 CREATE PROCEDURE AJO_DER.migrar_carrera
 AS
 	BEGIN
-		INSERT INTO AJO_DER.carrera(
-			codigo,
-			id_circuito,
-			cant_vueltas,
-			fecha,
-			clima,
-			total_carrera
-		)
-		SELECT DISTINCT CODIGO_CARRERA, circuito.id, CARRERA_CANT_VUELTAS, CARRERA_FECHA, CARRERA_CLIMA, CARRERA_TOTAL_CARRERA FROM GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.circuito ON GD1C2022.gd_esquema.Maestra.CIRCUITO_CODIGO = circuito.codigo
+		INSERT INTO AJO_DER.carrera
+		SELECT DISTINCT circuito.id, CARRERA_CANT_VUELTAS, CARRERA_FECHA, CODIGO_CARRERA, CARRERA_CLIMA, 
+		CARRERA_TOTAL_CARRERA FROM GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.circuito ON CIRCUITO_CODIGO = circuito.codigo
 		ORDER BY CODIGO_CARRERA
 	END
 GO
@@ -653,25 +602,15 @@ GO
 CREATE PROCEDURE AJO_DER.migrar_medicion
 AS
 	BEGIN
-		INSERT INTO AJO_DER.medicion(
-			id_auto,
-			id_carrera,
-			id_sector,
-			nro_vuelta,
-			distancia_carrera,
-			distancia_vuelta,
-			tiempo_vuelta,
-			posicion,
-			velocidad,
-			cant_combustible
-		)
-		SELECT DISTINCT auto.id, carrera.id, sector.id, TELE_AUTO_NUMERO_VUELTA, TELE_AUTO_DISTANCIA_CARRERA, TELE_AUTO_DISTANCIA_VUELTA, TELE_AUTO_TIEMPO_VUELTA, TELE_AUTO_POSICION, TELE_AUTO_VELOCIDAD, TELE_AUTO_COMBUSTIBLE FROM GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.escuderia ON GD1C2022.gd_esquema.Maestra.ESCUDERIA_NOMBRE = escuderia.nombre
-		JOIN AJO_DER.auto ON GD1C2022.gd_esquema.Maestra.AUTO_NUMERO = auto.numero_auto
-		JOIN AJO_DER.carrera ON GD1C2022.gd_esquema.Maestra.CODIGO_CARRERA = carrera.codigo
-		JOIN AJO_DER.sector ON GD1C2022.gd_esquema.Maestra.CODIGO_SECTOR = sector.codigo
-		GROUP BY auto.id, carrera.id, sector.id, TELE_AUTO_NUMERO_VUELTA, TELE_AUTO_DISTANCIA_CARRERA, TELE_AUTO_DISTANCIA_VUELTA, TELE_AUTO_TIEMPO_VUELTA, TELE_AUTO_POSICION, TELE_AUTO_VELOCIDAD, TELE_AUTO_COMBUSTIBLE
-		ORDER BY carrera.id, auto.id, TELE_AUTO_DISTANCIA_CARRERA
+		INSERT INTO AJO_DER.medicion
+		SELECT DISTINCT auto.id, carrera.id, sector.id, TELE_AUTO_CODIGO, TELE_AUTO_NUMERO_VUELTA, 
+		TELE_AUTO_DISTANCIA_CARRERA, TELE_AUTO_DISTANCIA_VUELTA, TELE_AUTO_TIEMPO_VUELTA, 
+		TELE_AUTO_POSICION, TELE_AUTO_VELOCIDAD, TELE_AUTO_COMBUSTIBLE FROM GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.auto ON AUTO_MODELO = auto.modelo AND AUTO_NUMERO = auto.numero_auto
+		JOIN AJO_DER.carrera ON CODIGO_CARRERA = carrera.codigo
+		JOIN AJO_DER.sector ON CODIGO_SECTOR = sector.codigo
+		WHERE TELE_AUTO_CODIGO is not null
+		ORDER BY carrera.id, auto.id, TELE_AUTO_CODIGO
 	END
 GO
 
@@ -679,17 +618,12 @@ GO
 CREATE PROCEDURE AJO_DER.migrar_parada_box
 AS
 	BEGIN
-		INSERT INTO AJO_DER.parada_box(
-			id_carrera,
-			id_auto,
-			numero_vuelta,
-			tiempo_parada
-		)
+		INSERT INTO AJO_DER.parada_box
 		SELECT DISTINCT carrera.id, auto.id, PARADA_BOX_VUELTA, PARADA_BOX_TIEMPO
 		FROM GD1C2022.gd_esquema.Maestra
 		JOIN AJO_DER.carrera ON CODIGO_CARRERA = carrera.codigo
 		JOIN AJO_DER.escuderia ON ESCUDERIA_NOMBRE = escuderia.nombre
-		JOIN AJO_DER.auto ON AUTO_NUMERO = auto.numero_auto
+		JOIN AJO_DER.auto ON AUTO_NUMERO = auto.numero_auto and auto.id_escuderia = escuderia.id
 		where PARADA_BOX_TIEMPO is not null
 		ORDER BY carrera.id, auto.id, PARADA_BOX_VUELTA
 	END
@@ -699,14 +633,9 @@ GO
 CREATE PROCEDURE AJO_DER.migrar_motores
 AS
 	BEGIN 	
-		INSERT INTO AJO_DER.motor(
-			numero_serie,
-			id_auto,
-			modelo
-		)
-		SELECT DISTINCT TELE_MOTOR_NRO_SERIE, auto.id, TELE_MOTOR_MODELO from GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.piloto ON PILOTO_NOMBRE = piloto.nombre 
-		AND PILOTO_APELLIDO = piloto.apellido
+		INSERT INTO AJO_DER.motor
+		SELECT DISTINCT auto.id, TELE_MOTOR_MODELO, TELE_MOTOR_NRO_SERIE from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.piloto ON PILOTO_NOMBRE = piloto.nombre AND PILOTO_APELLIDO = piloto.apellido
 		JOIN AJO_DER.auto ON piloto.id = auto.id_piloto
 		where TELE_MOTOR_NRO_SERIE is not null
 		order by TELE_MOTOR_NRO_SERIE
@@ -716,34 +645,22 @@ GO
 CREATE PROCEDURE AJO_DER.migrar_estado_de_motor
 AS
 	BEGIN 	
-		INSERT INTO AJO_DER.estado_de_motor(
-			id_motor,	
-			id_medicion,
-			potencia,
-			temperatura_aceite,
-			temperatura_agua,
-			rpm
-		)
-		SELECT AJO_DER.motor.id,AJO_DER.medicion.id,TELE_MOTOR_POTENCIA,TELE_MOTOR_TEMP_ACEITE,TELE_MOTOR_TEMP_AGUA,TELE_MOTOR_RPM
-		from [GD1C2022].[gd_esquema].[Maestra]
-		JOIN AJO_DER.motor ON GD1C2022.gd_esquema.Maestra.TELE_MOTOR_NRO_SERIE = AJO_DER.motor.numero_serie				
-		JOIN AJO_DER.piloto ON GD1C2022.gd_esquema.Maestra.PILOTO_NOMBRE = 	AJO_DER.piloto.nombre AND GD1C2022.gd_esquema.Maestra.PILOTO_APELLIDO =	AJO_DER.piloto.apellido
-		JOIN AJO_DER.auto ON AJO_DER.auto.id_piloto = AJO_DER.piloto.id			
-		JOIN AJO_DER.medicion ON AJO_DER.medicion.id_auto = AJO_DER.auto.id			 
+		INSERT INTO AJO_DER.estado_de_motor
+		SELECT DISTINCT medicion.id, motor.id, TELE_MOTOR_POTENCIA, TELE_MOTOR_TEMP_ACEITE,
+		TELE_MOTOR_TEMP_AGUA, TELE_MOTOR_RPM from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.motor ON TELE_MOTOR_NRO_SERIE = motor.numero_serie	
+		WHERE TELE_AUTO_CODIGO is not null
+		ORDER BY medicion.id
   END
 GO
 
 CREATE PROCEDURE AJO_DER.migrar_caja_de_cambios
 AS
-	BEGIN 	
-		INSERT INTO AJO_DER.caja_de_cambios(
-			numero_serie,
-			id_auto,
-			modelo
-		)
-		Select DISTINCT TELE_CAJA_NRO_SERIE, auto.id, TELE_CAJA_MODELO from GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.piloto ON PILOTO_NOMBRE = piloto.nombre 
-		AND PILOTO_APELLIDO = piloto.apellido
+	BEGIN
+		INSERT INTO AJO_DER.caja_de_cambios
+		Select DISTINCT auto.id, TELE_CAJA_MODELO, TELE_CAJA_NRO_SERIE from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.piloto ON PILOTO_NOMBRE = piloto.nombre AND PILOTO_APELLIDO = piloto.apellido
 		JOIN AJO_DER.auto ON piloto.id = auto.id_piloto
 		where TELE_CAJA_NRO_SERIE is not null
 		order by TELE_CAJA_NRO_SERIE
@@ -753,16 +670,13 @@ GO
 CREATE PROCEDURE AJO_DER.migrar_estado_de_caja_de_cambios
 AS
 	BEGIN 	
-		INSERT INTO AJO_DER.estado_de_caja_de_cambios(
-			id_caja_de_cambios,
-			temperatura_aceite,
-			rpm,
-			desgaste
-		)
-		Select id,TELE_CAJA_TEMP_ACEITE,TELE_CAJA_RPM,TELE_CAJA_DESGASTE
-		from [GD1C2022].[gd_esquema].[Maestra]
-		JOIN AJO_DER.caja_de_cambios ON [GD1C2022].[gd_esquema].[Maestra].TELE_CAJA_NRO_SERIE = AJO_DER.caja_de_cambios.numero_serie
-		group by id,TELE_CAJA_DESGASTE,TELE_CAJA_RPM,TELE_CAJA_TEMP_ACEITE
+		INSERT INTO AJO_DER.estado_de_caja_de_cambios
+		Select DISTINCT medicion.id, caja_de_cambios.id, TELE_CAJA_TEMP_ACEITE, TELE_CAJA_RPM,
+		TELE_CAJA_DESGASTE from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.caja_de_cambios ON TELE_CAJA_NRO_SERIE = caja_de_cambios.numero_serie	
+		WHERE TELE_AUTO_CODIGO is not null	
+		ORDER BY medicion.id
 	END
 GO
 
@@ -770,19 +684,19 @@ CREATE PROCEDURE AJO_DER.migrar_posiciones
 AS
 	BEGIN 	
 		INSERT INTO AJO_DER.posicion
-		SELECT DISTINCT TELE_FRENO1_POSICION from [GD1C2022].[gd_esquema].[Maestra] 
+		SELECT DISTINCT TELE_FRENO1_POSICION from GD1C2022.gd_esquema.Maestra
 		where TELE_FRENO1_POSICION is not null
 
 		INSERT INTO AJO_DER.posicion
-		SELECT DISTINCT TELE_FRENO2_POSICION from [GD1C2022].[gd_esquema].[Maestra] 
+		SELECT DISTINCT TELE_FRENO2_POSICION from GD1C2022.gd_esquema.Maestra
 		where TELE_FRENO2_POSICION is not null
 
 		INSERT INTO AJO_DER.posicion
-		SELECT DISTINCT TELE_FRENO3_POSICION from [GD1C2022].[gd_esquema].[Maestra] 
+		SELECT DISTINCT TELE_FRENO3_POSICION from GD1C2022.gd_esquema.Maestra
 		where TELE_FRENO3_POSICION is not null
 
 		INSERT INTO AJO_DER.posicion
-		SELECT DISTINCT TELE_FRENO4_POSICION from [GD1C2022].[gd_esquema].[Maestra] 
+		SELECT DISTINCT TELE_FRENO4_POSICION from GD1C2022.gd_esquema.Maestra
 		where TELE_FRENO4_POSICION is not null	
 	END
 GO
@@ -791,109 +705,73 @@ CREATE PROCEDURE AJO_DER.migrar_frenos
 AS
 	BEGIN 	
 		INSERT INTO AJO_DER.freno
-		SELECT DISTINCT auto.id, TELE_FRENO1_NRO_SERIE, TELE_FRENO1_TAMANIO_DISCO 
+		SELECT DISTINCT auto.id, posicion.id, TELE_FRENO1_NRO_SERIE, TELE_FRENO1_TAMANIO_DISCO 
 		from GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.piloto ON PILOTO_NOMBRE = piloto.nombre 
-		AND PILOTO_APELLIDO = piloto.apellido
-		JOIN AJO_DER.auto ON piloto.id = auto.id_piloto
+		JOIN AJO_DER.auto ON AUTO_MODELO = auto.modelo AND AUTO_NUMERO = auto.numero_auto
+		JOIN AJO_DER.posicion ON TELE_FRENO1_POSICION = posicion.descripcion
 		where TELE_FRENO1_NRO_SERIE is not null
 		order by TELE_FRENO1_NRO_SERIE
 
 		INSERT INTO AJO_DER.freno
-		SELECT DISTINCT auto.id, TELE_FRENO2_NRO_SERIE, TELE_FRENO1_TAMANIO_DISCO
+		SELECT DISTINCT auto.id, posicion.id, TELE_FRENO2_NRO_SERIE, TELE_FRENO1_TAMANIO_DISCO
 		from GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.piloto ON PILOTO_NOMBRE = piloto.nombre 
-		AND PILOTO_APELLIDO = piloto.apellido
-		JOIN AJO_DER.auto ON piloto.id = auto.id_piloto
+		JOIN AJO_DER.auto ON AUTO_MODELO = auto.modelo AND AUTO_NUMERO = auto.numero_auto
+		JOIN AJO_DER.posicion ON TELE_FRENO2_POSICION = posicion.descripcion
 		where TELE_FRENO2_NRO_SERIE is not null
 		order by TELE_FRENO2_NRO_SERIE
 
 		INSERT INTO AJO_DER.freno
-		SELECT DISTINCT auto.id, TELE_FRENO3_NRO_SERIE, TELE_FRENO1_TAMANIO_DISCO
+		SELECT DISTINCT auto.id, posicion.id, TELE_FRENO3_NRO_SERIE, TELE_FRENO1_TAMANIO_DISCO
 		from GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.piloto ON PILOTO_NOMBRE = piloto.nombre 
-		AND PILOTO_APELLIDO = piloto.apellido
-		JOIN AJO_DER.auto ON piloto.id = auto.id_piloto
+		JOIN AJO_DER.auto ON AUTO_MODELO = auto.modelo AND AUTO_NUMERO = auto.numero_auto
+		JOIN AJO_DER.posicion ON TELE_FRENO3_POSICION = posicion.descripcion
 		where TELE_FRENO3_NRO_SERIE is not null
 		order by TELE_FRENO3_NRO_SERIE
 
 		INSERT INTO AJO_DER.freno
-		SELECT DISTINCT auto.id, TELE_FRENO4_NRO_SERIE, TELE_FRENO1_TAMANIO_DISCO
+		SELECT DISTINCT auto.id, posicion.id, TELE_FRENO4_NRO_SERIE, TELE_FRENO1_TAMANIO_DISCO
 		from GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.piloto ON PILOTO_NOMBRE = piloto.nombre 
-		AND PILOTO_APELLIDO = piloto.apellido
-		JOIN AJO_DER.auto ON piloto.id = auto.id_piloto
+		JOIN AJO_DER.auto ON AUTO_MODELO = auto.modelo AND AUTO_NUMERO = auto.numero_auto
+		JOIN AJO_DER.posicion ON TELE_FRENO4_POSICION = posicion.descripcion
 		where TELE_FRENO4_NRO_SERIE is not null
 		order by TELE_FRENO4_NRO_SERIE
 	END
 GO
 
-CREATE PROCEDURE AJO_DER.migrar_estado_de_freno_1
+CREATE PROCEDURE AJO_DER.migrar_estado_de_freno
 AS
-	BEGIN 	
-		INSERT INTO AJO_DER.estado_freno(
-			id_freno,			
-			grosor_pastilla,
-			id_posicion,
-			tamanio_disco,
-			temperatura
-			)
-		--revisar freno.id
-		SELECT DISTINCT AJO_DER.freno.id,TELE_FRENO1_GROSOR_PASTILLA,AJO_DER.posicion.id,TELE_FRENO1_TAMANIO_DISCO,TELE_FRENO1_TEMPERATURA from [GD1C2022].[gd_esquema].[Maestra]
-		JOIN AJO_DER.freno ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO1_NRO_SERIE = AJO_DER.freno.numero_serie
-		JOIN AJO_DER.posicion ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO1_POSICION = AJO_DER.posicion.descripcion
-		group by AJO_DER.freno.id,TELE_FRENO1_GROSOR_PASTILLA,AJO_DER.posicion.id,TELE_FRENO1_TAMANIO_DISCO,TELE_FRENO1_TEMPERATURA
-	END
-GO
+	BEGIN
+		INSERT INTO AJO_DER.estado_freno
+		SELECT DISTINCT medicion.id, freno.id, TELE_FRENO1_GROSOR_PASTILLA, TELE_FRENO1_TEMPERATURA
+		from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.freno ON TELE_FRENO1_NRO_SERIE = freno.numero_serie	
+		WHERE TELE_AUTO_CODIGO is not null
+		order by medicion.id
 
-CREATE PROCEDURE AJO_DER.migrar_estado_de_freno_2
-AS
-	BEGIN 	
-		INSERT INTO AJO_DER.estado_freno(
-			id_freno,
-			grosor_pastilla,
-			id_posicion,
-			tamanio_disco,
-			temperatura
-		)
-		Select AJO_DER.freno.id,TELE_FRENO2_GROSOR_PASTILLA,AJO_DER.posicion.id,TELE_FRENO2_TAMANIO_DISCO,TELE_FRENO2_TEMPERATURA from [GD1C2022].[gd_esquema].[Maestra]
-		JOIN AJO_DER.freno ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO2_NRO_SERIE = AJO_DER.freno.numero_serie
-		JOIN AJO_DER.posicion ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO2_POSICION = AJO_DER.posicion.descripcion
-		group by AJO_DER.freno.id,TELE_FRENO2_GROSOR_PASTILLA,AJO_DER.posicion.id,TELE_FRENO2_TAMANIO_DISCO,TELE_FRENO2_TEMPERATURA
-	END
-GO
+		INSERT INTO AJO_DER.estado_freno
+		SELECT DISTINCT medicion.id, freno.id, TELE_FRENO2_GROSOR_PASTILLA, TELE_FRENO2_TEMPERATURA
+		from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.freno ON TELE_FRENO2_NRO_SERIE = freno.numero_serie	
+		WHERE TELE_AUTO_CODIGO is not null
+		order by medicion.id
 
-CREATE PROCEDURE AJO_DER.migrar_estado_de_freno_3
-AS
-	BEGIN 	
-		INSERT INTO AJO_DER.estado_freno(
-			id_freno,
-			grosor_pastilla,
-			id_posicion,
-			tamanio_disco,
-			temperatura
-		)
-		Select AJO_DER.freno.id,TELE_FRENO3_GROSOR_PASTILLA,AJO_DER.posicion.id,TELE_FRENO3_TAMANIO_DISCO,TELE_FRENO3_TEMPERATURA from [GD1C2022].[gd_esquema].[Maestra]
-		JOIN AJO_DER.freno ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO3_NRO_SERIE = AJO_DER.freno.numero_serie
-		JOIN AJO_DER.posicion ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO3_POSICION = AJO_DER.posicion.descripcion
-		group by AJO_DER.freno.id,TELE_FRENO3_GROSOR_PASTILLA,AJO_DER.posicion.id,TELE_FRENO3_TAMANIO_DISCO,TELE_FRENO3_TEMPERATURA
-	END
-GO
+		INSERT INTO AJO_DER.estado_freno
+		SELECT DISTINCT medicion.id, freno.id, TELE_FRENO3_GROSOR_PASTILLA, TELE_FRENO3_TEMPERATURA
+		from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.freno ON TELE_FRENO3_NRO_SERIE = freno.numero_serie	
+		WHERE TELE_AUTO_CODIGO is not null
+		order by medicion.id
 
-CREATE PROCEDURE AJO_DER.migrar_estado_de_freno_4
-AS
-	BEGIN 	
-		INSERT INTO AJO_DER.estado_freno(
-			id_freno,
-			grosor_pastilla,
-			id_posicion,
-			tamanio_disco,
-			temperatura
-		)
-		Select AJO_DER.freno.id,TELE_FRENO4_GROSOR_PASTILLA,AJO_DER.posicion.id,TELE_FRENO4_TAMANIO_DISCO,TELE_FRENO4_TEMPERATURA from [GD1C2022].[gd_esquema].[Maestra]
-		JOIN AJO_DER.freno ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO4_NRO_SERIE = AJO_DER.freno.numero_serie
-		JOIN AJO_DER.posicion ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO4_POSICION = AJO_DER.posicion.descripcion
-		group by AJO_DER.freno.id,TELE_FRENO4_GROSOR_PASTILLA,AJO_DER.posicion.id,TELE_FRENO4_TAMANIO_DISCO,TELE_FRENO4_TEMPERATURA
+		INSERT INTO AJO_DER.estado_freno
+		SELECT DISTINCT medicion.id, freno.id, TELE_FRENO4_GROSOR_PASTILLA, TELE_FRENO4_TEMPERATURA
+		from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.freno ON TELE_FRENO4_NRO_SERIE = freno.numero_serie	
+		WHERE TELE_AUTO_CODIGO is not null
+		order by medicion.id
 	END
 GO
 
@@ -910,210 +788,133 @@ CREATE PROCEDURE AJO_DER.migrar_neumaticos
 AS
 	BEGIN 	
 		INSERT INTO AJO_DER.neumatico
-		SELECT DISTINCT auto.id, tipo_neumatico.id, TELE_NEUMATICO1_NRO_SERIE
+		SELECT DISTINCT auto.id, tipo_neumatico.id, posicion.id, TELE_NEUMATICO1_NRO_SERIE
 		from GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.piloto ON PILOTO_NOMBRE = piloto.nombre 
-		AND PILOTO_APELLIDO = piloto.apellido
-		JOIN AJO_DER.auto ON piloto.id = auto.id_piloto
+		JOIN AJO_DER.auto ON AUTO_MODELO = auto.modelo AND AUTO_NUMERO = auto.numero_auto
 		JOIN AJO_DER.tipo_neumatico ON NEUMATICO1_TIPO_VIEJO = tipo_neumatico.tipo
+		JOIN AJO_DER.posicion ON TELE_NEUMATICO1_POSICION = posicion.descripcion
 		where TELE_NEUMATICO1_NRO_SERIE is not null
 		order by TELE_NEUMATICO1_NRO_SERIE
 
 		INSERT INTO AJO_DER.neumatico
-		SELECT DISTINCT auto.id, tipo_neumatico.id, TELE_NEUMATICO2_NRO_SERIE
+		SELECT DISTINCT auto.id, tipo_neumatico.id, posicion.id, TELE_NEUMATICO2_NRO_SERIE
 		from GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.piloto ON PILOTO_NOMBRE = piloto.nombre 
-		AND PILOTO_APELLIDO = piloto.apellido
-		JOIN AJO_DER.auto ON piloto.id = auto.id_piloto
+		JOIN AJO_DER.auto ON AUTO_MODELO = auto.modelo AND AUTO_NUMERO = auto.numero_auto
 		JOIN AJO_DER.tipo_neumatico ON NEUMATICO2_TIPO_VIEJO = tipo_neumatico.tipo
+		JOIN AJO_DER.posicion ON TELE_NEUMATICO2_POSICION = posicion.descripcion
 		where TELE_NEUMATICO2_NRO_SERIE is not null
 		order by TELE_NEUMATICO2_NRO_SERIE
 
 		INSERT INTO AJO_DER.neumatico
-		SELECT DISTINCT auto.id, tipo_neumatico.id, TELE_NEUMATICO3_NRO_SERIE
+		SELECT DISTINCT auto.id, tipo_neumatico.id, posicion.id, TELE_NEUMATICO3_NRO_SERIE
 		from GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.piloto ON PILOTO_NOMBRE = piloto.nombre 
-		AND PILOTO_APELLIDO = piloto.apellido
-		JOIN AJO_DER.auto ON piloto.id = auto.id_piloto
+		JOIN AJO_DER.auto ON AUTO_MODELO = auto.modelo AND AUTO_NUMERO = auto.numero_auto
 		JOIN AJO_DER.tipo_neumatico ON NEUMATICO3_TIPO_VIEJO = tipo_neumatico.tipo
+		JOIN AJO_DER.posicion ON TELE_NEUMATICO3_POSICION = posicion.descripcion
 		where TELE_NEUMATICO3_NRO_SERIE is not null
 		order by TELE_NEUMATICO3_NRO_SERIE
 
 		INSERT INTO AJO_DER.neumatico
-		SELECT DISTINCT auto.id, tipo_neumatico.id, TELE_NEUMATICO4_NRO_SERIE
+		SELECT DISTINCT auto.id, tipo_neumatico.id, posicion.id, TELE_NEUMATICO4_NRO_SERIE
 		from GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.piloto ON PILOTO_NOMBRE = piloto.nombre 
-		AND PILOTO_APELLIDO = piloto.apellido
-		JOIN AJO_DER.auto ON piloto.id = auto.id_piloto
+		JOIN AJO_DER.auto ON AUTO_MODELO = auto.modelo AND AUTO_NUMERO = auto.numero_auto
 		JOIN AJO_DER.tipo_neumatico ON NEUMATICO4_TIPO_VIEJO = tipo_neumatico.tipo
+		JOIN AJO_DER.posicion ON TELE_NEUMATICO4_POSICION = posicion.descripcion
 		where TELE_NEUMATICO4_NRO_SERIE is not null
 		order by TELE_NEUMATICO4_NRO_SERIE
 	END
 GO
 
 -- Migrar cambio_neumaticos
-CREATE PROCEDURE AJO_DER.migrar_cambio_neumaticos_anterior_1
+CREATE PROCEDURE AJO_DER.migrar_cambio_neumaticos
 AS
 	BEGIN
-		--INSERT INTO AJO_DER.cambio_neumaticos
-		--SELECT DISTINCT parada_box.id, neumatico.id, neumatico2.id, posicion.id 
-		--FROM GD1C2022.gd_esquema.Maestra
-		--JOIN AJO_DER.neumatico ON NEUMATICO1_NRO_SERIE_VIEJO = AJO_DER.neumatico.numero_serie
-		--JOIN AJO_DER.carrera ON CODIGO_CARRERA = carrera.codigo
-		--JOIN AJO_DER.piloto ON PILOTO_NOMBRE = piloto.nombre AND PILOTO_APELLIDO = piloto.apellido
-		--JOIN AJO_DER.auto ON piloto.id = auto.id_piloto
-		--JOIN AJO_DER.parada_box ON carrera.id = parada_box.id_carrera
-		--AND auto.id = parada_box.id_auto
-		--AND PARADA_BOX_VUELTA = parada_box.numero_vuelta
-		--JOIN AJO_DER.neumatico neumatico2 ON NEUMATICO1_NRO_SERIE_NUEVO = neumatico.numero_serie
-		--JOIN AJO_DER.posicion ON NEUMATICO1_POSICION_VIEJO = posicion.descripcion
-
-
-
-
-		INSERT INTO AJO_DER.cambio_neumaticos(
-			id_parada_box,
-			id_neumatico_anterior,
-			id_posicion
-		)
-		SELECT DISTINCT AJO_DER.parada_box.id, AJO_DER.neumatico.id, AJO_DER.posicion.id
+		INSERT INTO AJO_DER.cambio_neumaticos
+		SELECT distinct parada_box.id, neumatico_viejo.id, neumatico_nuevo.id
 		FROM GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.carrera ON CODIGO_CARRERA = AJO_DER.carrera.codigo
-		JOIN AJO_DER.parada_box ON PARADA_BOX_VUELTA = AJO_DER.parada_box.numero_vuelta
-		JOIN AJO_DER.neumatico ON NEUMATICO1_NRO_SERIE_VIEJO = AJO_DER.neumatico.numero_serie
-		JOIN AJO_DER.posicion ON NEUMATICO1_POSICION_VIEJO = AJO_DER.posicion.descripcion
-		GROUP BY AJO_DER.parada_box.id, AJO_DER.neumatico.id, AJO_DER.posicion.id
-	END
-GO
-
-CREATE PROCEDURE AJO_DER.migrar_cambio_neumaticos_anterior_2
-AS
-	BEGIN
-		INSERT INTO AJO_DER.cambio_neumaticos(
-			id_parada_box,
-			id_neumatico_anterior,
-			id_posicion
-		)
-		SELECT DISTINCT AJO_DER.parada_box.id, AJO_DER.neumatico.id, AJO_DER.posicion.id
-		FROM GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.carrera ON GD1C2022.gd_esquema.Maestra.CODIGO_CARRERA = AJO_DER.carrera.codigo
-		JOIN AJO_DER.parada_box ON GD1C2022.gd_esquema.Maestra.PARADA_BOX_VUELTA = AJO_DER.parada_box.numero_vuelta
-		JOIN AJO_DER.neumatico ON GD1C2022.gd_esquema.Maestra.NEUMATICO2_NRO_SERIE_VIEJO = AJO_DER.neumatico.numero_serie
-		JOIN AJO_DER.posicion ON GD1C2022.gd_esquema.Maestra.NEUMATICO2_POSICION_VIEJO = AJO_DER.posicion.descripcion
-		GROUP BY AJO_DER.parada_box.id, AJO_DER.neumatico.id, AJO_DER.posicion.id
-	END
-GO
-
-CREATE PROCEDURE AJO_DER.migrar_cambio_neumaticos_anterior_3
-AS
-	BEGIN
-		INSERT INTO AJO_DER.cambio_neumaticos(
-			id_parada_box,
-			id_neumatico_anterior,
-			id_posicion
-		)
-		SELECT DISTINCT AJO_DER.parada_box.id, AJO_DER.neumatico.id, AJO_DER.posicion.id
-		FROM GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.carrera ON GD1C2022.gd_esquema.Maestra.CODIGO_CARRERA = AJO_DER.carrera.codigo
-		JOIN AJO_DER.parada_box ON GD1C2022.gd_esquema.Maestra.PARADA_BOX_VUELTA = AJO_DER.parada_box.numero_vuelta
-		JOIN AJO_DER.neumatico ON GD1C2022.gd_esquema.Maestra.NEUMATICO3_NRO_SERIE_VIEJO = AJO_DER.neumatico.numero_serie
-		JOIN AJO_DER.posicion ON GD1C2022.gd_esquema.Maestra.NEUMATICO3_POSICION_VIEJO = AJO_DER.posicion.descripcion
-		GROUP BY AJO_DER.parada_box.id, AJO_DER.neumatico.id, AJO_DER.posicion.id
-	END
-GO
-
-CREATE PROCEDURE AJO_DER.migrar_cambio_neumaticos_anterior_4
-AS
-	BEGIN
-		INSERT INTO AJO_DER.cambio_neumaticos(
-			id_parada_box,
-			id_neumatico_anterior,
-			id_posicion
-		)
-		SELECT DISTINCT AJO_DER.parada_box.id, AJO_DER.neumatico.id, AJO_DER.posicion.id
-		FROM GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.carrera ON GD1C2022.gd_esquema.Maestra.CODIGO_CARRERA = AJO_DER.carrera.codigo
-		JOIN AJO_DER.parada_box ON GD1C2022.gd_esquema.Maestra.PARADA_BOX_VUELTA = AJO_DER.parada_box.numero_vuelta
-		JOIN AJO_DER.neumatico ON GD1C2022.gd_esquema.Maestra.NEUMATICO4_NRO_SERIE_VIEJO = AJO_DER.neumatico.numero_serie
-		JOIN AJO_DER.posicion ON GD1C2022.gd_esquema.Maestra.NEUMATICO4_POSICION_VIEJO = AJO_DER.posicion.descripcion
-		GROUP BY AJO_DER.parada_box.id, AJO_DER.neumatico.id, AJO_DER.posicion.id
-	END
-GO
-
-CREATE PROCEDURE AJO_DER.migrar_cambio_neumaticos_nuevo_1
-AS
-	BEGIN
-		INSERT INTO AJO_DER.cambio_neumaticos(
-			id_parada_box,
-			id_neumatico_nuevo,
-			id_posicion
-		)
-		SELECT DISTINCT parada_box.id, neumatico.id, posicion.id
-		FROM GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.neumatico neumatico_viejo ON NEUMATICO1_NRO_SERIE_VIEJO = neumatico_viejo.numero_serie
+		JOIN AJO_DER.neumatico neumatico_nuevo ON NEUMATICO1_NRO_SERIE_NUEVO = neumatico_nuevo.numero_serie
 		JOIN AJO_DER.carrera ON CODIGO_CARRERA = carrera.codigo
-		JOIN AJO_DER.parada_box ON PARADA_BOX_VUELTA = parada_box.numero_vuelta
-		JOIN AJO_DER.neumatico ON NEUMATICO1_NRO_SERIE_NUEVO = neumatico.numero_serie
-		JOIN AJO_DER.posicion ON NEUMATICO1_POSICION_NUEVO = posicion.descripcion
-		GROUP BY parada_box.id, neumatico.id, posicion.id
-	END
-GO
+		JOIN AJO_DER.auto ON AUTO_MODELO = auto.modelo AND AUTO_NUMERO = auto.numero_auto
+		JOIN AJO_DER.parada_box ON carrera.id = parada_box.id_carrera
+		AND auto.id = parada_box.id_auto
+		AND PARADA_BOX_VUELTA = parada_box.numero_vuelta
+		order by parada_box.id
 
-CREATE PROCEDURE AJO_DER.migrar_cambio_neumaticos_nuevo_2
-AS
-	BEGIN
-		INSERT INTO AJO_DER.cambio_neumaticos(
-			id_parada_box,
-			id_neumatico_nuevo,
-			id_posicion
-		)
-		SELECT DISTINCT AJO_DER.parada_box.id, AJO_DER.neumatico.id, AJO_DER.posicion.id
+		INSERT INTO AJO_DER.cambio_neumaticos
+		SELECT distinct parada_box.id, neumatico_viejo.id, neumatico_nuevo.id
 		FROM GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.carrera ON GD1C2022.gd_esquema.Maestra.CODIGO_CARRERA = AJO_DER.carrera.codigo
-		JOIN AJO_DER.parada_box ON GD1C2022.gd_esquema.Maestra.PARADA_BOX_VUELTA = AJO_DER.parada_box.numero_vuelta
-		JOIN AJO_DER.neumatico ON GD1C2022.gd_esquema.Maestra.NEUMATICO2_NRO_SERIE_NUEVO = AJO_DER.neumatico.numero_serie
-		JOIN AJO_DER.posicion ON GD1C2022.gd_esquema.Maestra.NEUMATICO2_POSICION_NUEVO = AJO_DER.posicion.descripcion
-		GROUP BY AJO_DER.parada_box.id, AJO_DER.neumatico.id, AJO_DER.posicion.id
-	END
-GO
+		JOIN AJO_DER.neumatico neumatico_viejo ON NEUMATICO2_NRO_SERIE_VIEJO = neumatico_viejo.numero_serie
+		JOIN AJO_DER.neumatico neumatico_nuevo ON NEUMATICO2_NRO_SERIE_NUEVO = neumatico_nuevo.numero_serie
+		JOIN AJO_DER.carrera ON CODIGO_CARRERA = carrera.codigo
+		JOIN AJO_DER.auto ON AUTO_MODELO = auto.modelo AND AUTO_NUMERO = auto.numero_auto
+		JOIN AJO_DER.parada_box ON carrera.id = parada_box.id_carrera
+		AND auto.id = parada_box.id_auto
+		AND PARADA_BOX_VUELTA = parada_box.numero_vuelta
+		order by parada_box.id
 
-CREATE PROCEDURE AJO_DER.migrar_cambio_neumaticos_nuevo_3
-AS
-	BEGIN
-		INSERT INTO AJO_DER.cambio_neumaticos(
-			id_parada_box,
-			id_neumatico_nuevo,
-			id_posicion
-		)
-		SELECT DISTINCT AJO_DER.parada_box.id, AJO_DER.neumatico.id, AJO_DER.posicion.id
+		INSERT INTO AJO_DER.cambio_neumaticos
+		SELECT distinct parada_box.id, neumatico_viejo.id, neumatico_nuevo.id
 		FROM GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.carrera ON GD1C2022.gd_esquema.Maestra.CODIGO_CARRERA = AJO_DER.carrera.codigo
-		JOIN AJO_DER.parada_box ON GD1C2022.gd_esquema.Maestra.PARADA_BOX_VUELTA = AJO_DER.parada_box.numero_vuelta
-		JOIN AJO_DER.neumatico ON GD1C2022.gd_esquema.Maestra.NEUMATICO3_NRO_SERIE_NUEVO = AJO_DER.neumatico.numero_serie
-		JOIN AJO_DER.posicion ON GD1C2022.gd_esquema.Maestra.NEUMATICO3_POSICION_NUEVO = AJO_DER.posicion.descripcion
-		GROUP BY AJO_DER.parada_box.id, AJO_DER.neumatico.id, AJO_DER.posicion.id
-	END
-GO
+		JOIN AJO_DER.neumatico neumatico_viejo ON NEUMATICO3_NRO_SERIE_VIEJO = neumatico_viejo.numero_serie
+		JOIN AJO_DER.neumatico neumatico_nuevo ON NEUMATICO3_NRO_SERIE_NUEVO = neumatico_nuevo.numero_serie
+		JOIN AJO_DER.carrera ON CODIGO_CARRERA = carrera.codigo
+		JOIN AJO_DER.auto ON AUTO_MODELO = auto.modelo AND AUTO_NUMERO = auto.numero_auto
+		JOIN AJO_DER.parada_box ON carrera.id = parada_box.id_carrera
+		AND auto.id = parada_box.id_auto
+		AND PARADA_BOX_VUELTA = parada_box.numero_vuelta
+		order by parada_box.id
 
-CREATE PROCEDURE AJO_DER.migrar_cambio_neumaticos_nuevo_4
-AS
-	BEGIN
-		INSERT INTO AJO_DER.cambio_neumaticos(
-			id_parada_box,
-			id_neumatico_nuevo,
-			id_posicion
-		)
-		SELECT DISTINCT AJO_DER.parada_box.id, AJO_DER.neumatico.id, AJO_DER.posicion.id
+		INSERT INTO AJO_DER.cambio_neumaticos
+		SELECT distinct parada_box.id, neumatico_viejo.id, neumatico_nuevo.id
 		FROM GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.carrera ON GD1C2022.gd_esquema.Maestra.CODIGO_CARRERA = AJO_DER.carrera.codigo
-		JOIN AJO_DER.parada_box ON GD1C2022.gd_esquema.Maestra.PARADA_BOX_VUELTA = AJO_DER.parada_box.numero_vuelta
-		JOIN AJO_DER.neumatico ON GD1C2022.gd_esquema.Maestra.NEUMATICO4_NRO_SERIE_NUEVO = AJO_DER.neumatico.numero_serie
-		JOIN AJO_DER.posicion ON GD1C2022.gd_esquema.Maestra.NEUMATICO4_POSICION_NUEVO = AJO_DER.posicion.descripcion
-		GROUP BY AJO_DER.parada_box.id, AJO_DER.neumatico.id, AJO_DER.posicion.id
+		JOIN AJO_DER.neumatico neumatico_viejo ON NEUMATICO4_NRO_SERIE_VIEJO = neumatico_viejo.numero_serie
+		JOIN AJO_DER.neumatico neumatico_nuevo ON NEUMATICO4_NRO_SERIE_NUEVO = neumatico_nuevo.numero_serie
+		JOIN AJO_DER.carrera ON CODIGO_CARRERA = carrera.codigo
+		JOIN AJO_DER.auto ON AUTO_MODELO = auto.modelo AND AUTO_NUMERO = auto.numero_auto
+		JOIN AJO_DER.parada_box ON carrera.id = parada_box.id_carrera
+		AND auto.id = parada_box.id_auto
+		AND PARADA_BOX_VUELTA = parada_box.numero_vuelta
+		order by parada_box.id
 	END
 GO
 
--- PENDIENTE
--- migrar_estado_neumaticos
+CREATE PROCEDURE AJO_DER.migrar_estado_neumaticos
+AS
+	BEGIN 	
+		INSERT INTO AJO_DER.estado_neumatico 
+		SELECT DISTINCT medicion.id, neumatico.id, TELE_NEUMATICO1_PROFUNDIDAD, TELE_NEUMATICO1_PRESION,
+		TELE_NEUMATICO1_TEMPERATURA from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.neumatico ON TELE_NEUMATICO1_NRO_SERIE = neumatico.numero_serie
+		WHERE TELE_AUTO_CODIGO is not null
+		order by medicion.id
+
+		INSERT INTO AJO_DER.estado_neumatico 
+		SELECT DISTINCT medicion.id, neumatico.id, TELE_NEUMATICO2_PROFUNDIDAD, TELE_NEUMATICO2_PRESION,
+		TELE_NEUMATICO2_TEMPERATURA from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.neumatico ON TELE_NEUMATICO2_NRO_SERIE = neumatico.numero_serie
+		WHERE TELE_AUTO_CODIGO is not null
+		order by medicion.id
+
+		INSERT INTO AJO_DER.estado_neumatico 
+		SELECT DISTINCT medicion.id, neumatico.id, TELE_NEUMATICO3_PROFUNDIDAD, TELE_NEUMATICO3_PRESION,
+		TELE_NEUMATICO3_TEMPERATURA from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.neumatico ON TELE_NEUMATICO3_NRO_SERIE = neumatico.numero_serie
+		WHERE TELE_AUTO_CODIGO is not null
+		order by medicion.id
+
+		INSERT INTO AJO_DER.estado_neumatico 
+		SELECT DISTINCT medicion.id, neumatico.id, TELE_NEUMATICO4_PROFUNDIDAD, TELE_NEUMATICO4_PRESION,
+		TELE_NEUMATICO4_TEMPERATURA from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.neumatico ON TELE_NEUMATICO4_NRO_SERIE = neumatico.numero_serie
+		WHERE TELE_AUTO_CODIGO is not null
+		order by medicion.id
+	END
+GO
 
 -- Ejecutar migraciones
 CREATE PROCEDURE AJO_DER.migrar_tablas
@@ -1138,25 +939,14 @@ AS
 		EXEC AJO_DER.migrar_frenos
 		EXEC AJO_DER.migrar_neumaticos
 		EXEC AJO_DER.migrar_parada_box
-		EXEC AJO_DER.migrar_cambio_neumaticos_anterior_1;
-		EXEC AJO_DER.migrar_cambio_neumaticos_anterior_2;
-		EXEC AJO_DER.migrar_cambio_neumaticos_anterior_3;
-		EXEC AJO_DER.migrar_cambio_neumaticos_anterior_4;
-		EXEC AJO_DER.migrar_cambio_neumaticos_nuevo_1;
-		EXEC AJO_DER.migrar_cambio_neumaticos_nuevo_2;
-		EXEC AJO_DER.migrar_cambio_neumaticos_nuevo_3;
-		EXEC AJO_DER.migrar_cambio_neumaticos_nuevo_4;
-
-		EXEC AJO_DER.migrar_estado_de_motor;
-		EXEC AJO_DER.migrar_estado_de_caja_de_cambios;
-		EXEC AJO_DER.migrar_estado_de_freno_1;
-		EXEC AJO_DER.migrar_estado_de_freno_2;
-		EXEC AJO_DER.migrar_estado_de_freno_3;
-		EXEC AJO_DER.migrar_estado_de_freno_4;
+		EXEC AJO_DER.migrar_cambio_neumaticos
 		EXEC AJO_DER.migrar_medicion
+		EXEC AJO_DER.migrar_estado_de_motor
+		EXEC AJO_DER.migrar_estado_de_caja_de_cambios
+		EXEC AJO_DER.migrar_estado_de_freno
+		EXEC AJO_DER.migrar_estado_neumaticos
 	END
 GO
-
 
 ---------------
 -- EJECUCION --
@@ -1165,4 +955,3 @@ GO
 EXEC AJO_DER.migrar_tablas
 
 DROP PROCEDURE AJO_DER.migrar_tablas
-
