@@ -713,16 +713,12 @@ GO
 CREATE PROCEDURE AJO_DER.migrar_estado_de_caja_de_cambios
 AS
 	BEGIN 	
-		INSERT INTO AJO_DER.estado_de_caja_de_cambios(
-			id_caja_de_cambios,
-			temperatura_aceite,
-			rpm,
-			desgaste
-		)
-		Select id,TELE_CAJA_TEMP_ACEITE,TELE_CAJA_RPM,TELE_CAJA_DESGASTE
-		from [GD1C2022].[gd_esquema].[Maestra]
-		JOIN AJO_DER.caja_de_cambios ON [GD1C2022].[gd_esquema].[Maestra].TELE_CAJA_NRO_SERIE = AJO_DER.caja_de_cambios.numero_serie
-		group by id,TELE_CAJA_DESGASTE,TELE_CAJA_RPM,TELE_CAJA_TEMP_ACEITE
+		INSERT INTO AJO_DER.estado_de_caja_de_cambios
+		Select DISTINCT medicion.id, caja_de_cambios.id, TELE_CAJA_TEMP_ACEITE, TELE_CAJA_RPM,
+		TELE_CAJA_DESGASTE from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.caja_de_cambios ON TELE_CAJA_NRO_SERIE = caja_de_cambios.numero_serie	
+		WHERE TELE_AUTO_CODIGO is not null	
 	END
 GO
 
