@@ -151,7 +151,7 @@ GO
 	IF OBJECT_ID('AJO_DER.migrar_estado_de_freno', 'P') IS NOT NULL
 		DROP PROCEDURE AJO_DER.migrar_estado_de_freno
 
-	IF OBJECT_ID('AJO_DER.migrar_migrar_estado_neumaticos', 'P') IS NOT NULL
+	IF OBJECT_ID('AJO_DER.migrar_estado_neumaticos', 'P') IS NOT NULL
 		DROP PROCEDURE AJO_DER.migrar_estado_neumaticos	
 
 	IF OBJECT_ID('AJO_DER.migrar_tablas', 'P') IS NOT NULL
