@@ -135,17 +135,8 @@ GO
 	IF OBJECT_ID('AJO_DER.migrar_frenos', 'P') IS NOT NULL
 		DROP PROCEDURE AJO_DER.migrar_frenos
 
-	IF OBJECT_ID('AJO_DER.migrar_estado_de_freno_1', 'P') IS NOT NULL
-		DROP PROCEDURE AJO_DER.migrar_estado_de_freno_1
-
-	IF OBJECT_ID('AJO_DER.migrar_estado_de_freno_2', 'P') IS NOT NULL
-		DROP PROCEDURE AJO_DER.migrar_estado_de_freno_2
-
-	IF OBJECT_ID('AJO_DER.migrar_estado_de_freno_3', 'P') IS NOT NULL
-		DROP PROCEDURE AJO_DER.migrar_estado_de_freno_3
-
-	IF OBJECT_ID('AJO_DER.migrar_estado_de_freno_4', 'P') IS NOT NULL
-		DROP PROCEDURE AJO_DER.migrar_estado_de_freno_4
+	IF OBJECT_ID('AJO_DER.migrar_estado_de_freno', 'P') IS NOT NULL
+		DROP PROCEDURE AJO_DER.migrar_estado_de_freno
 
 	IF OBJECT_ID('AJO_DER.migrar_tipo_neumatico', 'P') IS NOT NULL
 		DROP PROCEDURE AJO_DER.migrar_tipo_neumatico
@@ -788,72 +779,36 @@ AS
 	END
 GO
 
-CREATE PROCEDURE AJO_DER.migrar_estado_de_freno_1
+CREATE PROCEDURE AJO_DER.migrar_estado_de_freno
 AS
-	BEGIN 	
-		INSERT INTO AJO_DER.estado_freno(
-			id_freno,			
-			grosor_pastilla,
-			id_posicion,
-			tamanio_disco,
-			temperatura
-			)
-		--revisar freno.id
-		SELECT DISTINCT AJO_DER.freno.id,TELE_FRENO1_GROSOR_PASTILLA,AJO_DER.posicion.id,TELE_FRENO1_TAMANIO_DISCO,TELE_FRENO1_TEMPERATURA from [GD1C2022].[gd_esquema].[Maestra]
-		JOIN AJO_DER.freno ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO1_NRO_SERIE = AJO_DER.freno.numero_serie
-		JOIN AJO_DER.posicion ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO1_POSICION = AJO_DER.posicion.descripcion
-		group by AJO_DER.freno.id,TELE_FRENO1_GROSOR_PASTILLA,AJO_DER.posicion.id,TELE_FRENO1_TAMANIO_DISCO,TELE_FRENO1_TEMPERATURA
-	END
-GO
+	BEGIN
+		INSERT INTO AJO_DER.estado_freno
+		SELECT DISTINCT medicion.id, freno.id, TELE_FRENO1_GROSOR_PASTILLA, TELE_FRENO1_TEMPERATURA
+		from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.freno ON TELE_FRENO1_NRO_SERIE = freno.numero_serie	
+		WHERE TELE_AUTO_CODIGO is not null
 
-CREATE PROCEDURE AJO_DER.migrar_estado_de_freno_2
-AS
-	BEGIN 	
-		INSERT INTO AJO_DER.estado_freno(
-			id_freno,
-			grosor_pastilla,
-			id_posicion,
-			tamanio_disco,
-			temperatura
-		)
-		Select AJO_DER.freno.id,TELE_FRENO2_GROSOR_PASTILLA,AJO_DER.posicion.id,TELE_FRENO2_TAMANIO_DISCO,TELE_FRENO2_TEMPERATURA from [GD1C2022].[gd_esquema].[Maestra]
-		JOIN AJO_DER.freno ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO2_NRO_SERIE = AJO_DER.freno.numero_serie
-		JOIN AJO_DER.posicion ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO2_POSICION = AJO_DER.posicion.descripcion
-		group by AJO_DER.freno.id,TELE_FRENO2_GROSOR_PASTILLA,AJO_DER.posicion.id,TELE_FRENO2_TAMANIO_DISCO,TELE_FRENO2_TEMPERATURA
-	END
-GO
+		INSERT INTO AJO_DER.estado_freno
+		SELECT DISTINCT medicion.id, freno.id, TELE_FRENO2_GROSOR_PASTILLA, TELE_FRENO2_TEMPERATURA
+		from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.freno ON TELE_FRENO2_NRO_SERIE = freno.numero_serie	
+		WHERE TELE_AUTO_CODIGO is not null
 
-CREATE PROCEDURE AJO_DER.migrar_estado_de_freno_3
-AS
-	BEGIN 	
-		INSERT INTO AJO_DER.estado_freno(
-			id_freno,
-			grosor_pastilla,
-			id_posicion,
-			tamanio_disco,
-			temperatura
-		)
-		Select AJO_DER.freno.id,TELE_FRENO3_GROSOR_PASTILLA,AJO_DER.posicion.id,TELE_FRENO3_TAMANIO_DISCO,TELE_FRENO3_TEMPERATURA from [GD1C2022].[gd_esquema].[Maestra]
-		JOIN AJO_DER.freno ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO3_NRO_SERIE = AJO_DER.freno.numero_serie
-		JOIN AJO_DER.posicion ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO3_POSICION = AJO_DER.posicion.descripcion
-		group by AJO_DER.freno.id,TELE_FRENO3_GROSOR_PASTILLA,AJO_DER.posicion.id,TELE_FRENO3_TAMANIO_DISCO,TELE_FRENO3_TEMPERATURA
-	END
-GO
+		INSERT INTO AJO_DER.estado_freno
+		SELECT DISTINCT medicion.id, freno.id, TELE_FRENO3_GROSOR_PASTILLA, TELE_FRENO3_TEMPERATURA
+		from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.freno ON TELE_FRENO3_NRO_SERIE = freno.numero_serie	
+		WHERE TELE_AUTO_CODIGO is not null
 
-CREATE PROCEDURE AJO_DER.migrar_estado_de_freno_4
-AS
-	BEGIN 	
-		INSERT INTO AJO_DER.estado_freno(
-			id_freno,
-			grosor_pastilla,
-			id_posicion,
-			tamanio_disco,
-			temperatura
-		)
-		Select AJO_DER.freno.id,TELE_FRENO4_GROSOR_PASTILLA,AJO_DER.posicion.id,TELE_FRENO4_TAMANIO_DISCO,TELE_FRENO4_TEMPERATURA from [GD1C2022].[gd_esquema].[Maestra]
-		JOIN AJO_DER.freno ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO4_NRO_SERIE = AJO_DER.freno.numero_serie
-		JOIN AJO_DER.posicion ON [GD1C2022].[gd_esquema].[Maestra].TELE_FRENO4_POSICION = AJO_DER.posicion.descripcion
-		group by AJO_DER.freno.id,TELE_FRENO4_GROSOR_PASTILLA,AJO_DER.posicion.id,TELE_FRENO4_TAMANIO_DISCO,TELE_FRENO4_TEMPERATURA
+		INSERT INTO AJO_DER.estado_freno
+		SELECT DISTINCT medicion.id, freno.id, TELE_FRENO4_GROSOR_PASTILLA, TELE_FRENO4_TEMPERATURA
+		from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.freno ON TELE_FRENO4_NRO_SERIE = freno.numero_serie	
+		WHERE TELE_AUTO_CODIGO is not null
 	END
 GO
 
@@ -996,14 +951,10 @@ AS
 		EXEC AJO_DER.migrar_neumaticos
 		EXEC AJO_DER.migrar_parada_box
 		EXEC AJO_DER.migrar_cambio_neumaticos
-
-		EXEC AJO_DER.migrar_estado_de_motor;
-		EXEC AJO_DER.migrar_estado_de_caja_de_cambios;
-		EXEC AJO_DER.migrar_estado_de_freno_1;
-		EXEC AJO_DER.migrar_estado_de_freno_2;
-		EXEC AJO_DER.migrar_estado_de_freno_3;
-		EXEC AJO_DER.migrar_estado_de_freno_4;
 		EXEC AJO_DER.migrar_medicion
+		EXEC AJO_DER.migrar_estado_de_motor
+		EXEC AJO_DER.migrar_estado_de_caja_de_cambios
+		EXEC AJO_DER.migrar_estado_de_freno
 	END
 GO
 
