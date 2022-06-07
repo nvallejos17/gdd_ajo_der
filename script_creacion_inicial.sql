@@ -630,25 +630,16 @@ GO
 CREATE PROCEDURE AJO_DER.migrar_medicion
 AS
 	BEGIN
-		INSERT INTO AJO_DER.medicion(
-			id_auto,
-			id_carrera,
-			id_sector,
-			nro_vuelta,
-			distancia_carrera,
-			distancia_vuelta,
-			tiempo_vuelta,
-			posicion,
-			velocidad,
-			cant_combustible
-		)
-		SELECT DISTINCT auto.id, carrera.id, sector.id, TELE_AUTO_NUMERO_VUELTA, TELE_AUTO_DISTANCIA_CARRERA, TELE_AUTO_DISTANCIA_VUELTA, TELE_AUTO_TIEMPO_VUELTA, TELE_AUTO_POSICION, TELE_AUTO_VELOCIDAD, TELE_AUTO_COMBUSTIBLE FROM GD1C2022.gd_esquema.Maestra
-		JOIN AJO_DER.escuderia ON GD1C2022.gd_esquema.Maestra.ESCUDERIA_NOMBRE = escuderia.nombre
-		JOIN AJO_DER.auto ON GD1C2022.gd_esquema.Maestra.AUTO_NUMERO = auto.numero_auto
-		JOIN AJO_DER.carrera ON GD1C2022.gd_esquema.Maestra.CODIGO_CARRERA = carrera.codigo
-		JOIN AJO_DER.sector ON GD1C2022.gd_esquema.Maestra.CODIGO_SECTOR = sector.codigo
-		GROUP BY auto.id, carrera.id, sector.id, TELE_AUTO_NUMERO_VUELTA, TELE_AUTO_DISTANCIA_CARRERA, TELE_AUTO_DISTANCIA_VUELTA, TELE_AUTO_TIEMPO_VUELTA, TELE_AUTO_POSICION, TELE_AUTO_VELOCIDAD, TELE_AUTO_COMBUSTIBLE
-		ORDER BY carrera.id, auto.id, TELE_AUTO_DISTANCIA_CARRERA
+		INSERT INTO AJO_DER.medicion
+		SELECT DISTINCT auto.id, carrera.id, sector.id, TELE_AUTO_CODIGO, TELE_AUTO_NUMERO_VUELTA, 
+		TELE_AUTO_DISTANCIA_CARRERA, TELE_AUTO_DISTANCIA_VUELTA, TELE_AUTO_TIEMPO_VUELTA, 
+		TELE_AUTO_POSICION, TELE_AUTO_VELOCIDAD, TELE_AUTO_COMBUSTIBLE FROM GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.piloto ON PILOTO_NOMBRE = piloto.nombre AND PILOTO_APELLIDO = piloto.apellido
+		JOIN AJO_DER.auto ON piloto.id = auto.id_piloto
+		JOIN AJO_DER.carrera ON CODIGO_CARRERA = carrera.codigo
+		JOIN AJO_DER.sector ON CODIGO_SECTOR = sector.codigo
+		WHERE TELE_AUTO_CODIGO is not null
+		ORDER BY carrera.id, auto.id, TELE_AUTO_CODIGO
 	END
 GO
 
