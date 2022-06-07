@@ -153,6 +153,9 @@ GO
 	IF OBJECT_ID('AJO_DER.migrar_cambio_neumaticos', 'P') IS NOT NULL
 		DROP PROCEDURE AJO_DER.migrar_cambio_neumaticos
 
+	IF OBJECT_ID('AJO_DER.migrar_estado_neumaticos', 'P') IS NOT NULL
+		DROP PROCEDURE AJO_DER.migrar_estado_neumaticos
+
 -- Eliminacion de esquema
 IF EXISTS (SELECT name FROM sys.schemas WHERE name LIKE 'AJO_DER')
     DROP SCHEMA AJO_DER
@@ -924,8 +927,38 @@ AS
 	END
 GO
 
--- PENDIENTE
--- migrar_estado_neumaticos
+CREATE PROCEDURE AJO_DER.migrar_estado_neumaticos
+AS
+	BEGIN 	
+		INSERT INTO AJO_DER.estado_neumatico 
+		SELECT DISTINCT medicion.id, neumatico.id, TELE_NEUMATICO1_PROFUNDIDAD, TELE_NEUMATICO1_PRESION,
+		TELE_NEUMATICO1_TEMPERATURA from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.neumatico ON TELE_NEUMATICO1_NRO_SERIE = neumatico.numero_serie
+		WHERE TELE_AUTO_CODIGO is not null
+
+		INSERT INTO AJO_DER.estado_neumatico 
+		SELECT DISTINCT medicion.id, neumatico.id, TELE_NEUMATICO2_PROFUNDIDAD, TELE_NEUMATICO2_PRESION,
+		TELE_NEUMATICO2_TEMPERATURA from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.neumatico ON TELE_NEUMATICO2_NRO_SERIE = neumatico.numero_serie
+		WHERE TELE_AUTO_CODIGO is not null
+
+		INSERT INTO AJO_DER.estado_neumatico 
+		SELECT DISTINCT medicion.id, neumatico.id, TELE_NEUMATICO3_PROFUNDIDAD, TELE_NEUMATICO3_PRESION,
+		TELE_NEUMATICO3_TEMPERATURA from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.neumatico ON TELE_NEUMATICO3_NRO_SERIE = neumatico.numero_serie
+		WHERE TELE_AUTO_CODIGO is not null
+
+		INSERT INTO AJO_DER.estado_neumatico 
+		SELECT DISTINCT medicion.id, neumatico.id, TELE_NEUMATICO4_PROFUNDIDAD, TELE_NEUMATICO4_PRESION,
+		TELE_NEUMATICO4_TEMPERATURA from GD1C2022.gd_esquema.Maestra
+		JOIN AJO_DER.medicion ON TELE_AUTO_CODIGO = medicion.codigo_medicion
+		JOIN AJO_DER.neumatico ON TELE_NEUMATICO4_NRO_SERIE = neumatico.numero_serie
+		WHERE TELE_AUTO_CODIGO is not null
+	END
+GO
 
 -- Ejecutar migraciones
 CREATE PROCEDURE AJO_DER.migrar_tablas
@@ -955,6 +988,7 @@ AS
 		EXEC AJO_DER.migrar_estado_de_motor
 		EXEC AJO_DER.migrar_estado_de_caja_de_cambios
 		EXEC AJO_DER.migrar_estado_de_freno
+		EXEC AJO_DER.migrar_estado_neumaticos
 	END
 GO
 
