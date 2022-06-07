@@ -77,7 +77,7 @@ GO
 	IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'pais')
 		DROP TABLE AJO_DER.pais
 
--- Eliminacion de store procedure
+-- Eliminacion de store procedures
 	IF OBJECT_ID('AJO_DER.migrar_escuderia', 'P') IS NOT NULL
 		DROP PROCEDURE AJO_DER.migrar_escuderia
 
@@ -450,7 +450,8 @@ GO
 	ALTER TABLE AJO_DER.estado_neumatico ADD FOREIGN KEY(id_neumatico) REFERENCES AJO_DER.neumatico(id);
 
 GO
--- Migrar tipo_sector
+
+-- Store procedure para migrar tipo_sector
 CREATE PROCEDURE AJO_DER.migrar_tipo_sector
 AS
 	BEGIN
@@ -460,7 +461,7 @@ AS
 	END
 GO
 
--- Migrar pais
+-- Store procedure para migrar pais
 CREATE PROCEDURE AJO_DER.migrar_pais
 AS
 	BEGIN
@@ -480,6 +481,7 @@ AS
 	END
 GO
 
+-- Store procedure para migrar tipo_incidente
 CREATE PROCEDURE AJO_DER.migrar_tipo_incidente
 AS
 	BEGIN
@@ -489,6 +491,7 @@ AS
 	END
 GO
 
+-- Store procedure para migrar bandera
 CREATE PROCEDURE AJO_DER.migrar_bandera
 AS
 	BEGIN
@@ -498,6 +501,7 @@ AS
 	END
 GO
 
+-- Store procedure para migrar escuderia
 CREATE PROCEDURE AJO_DER.migrar_escuderia
 AS
 	BEGIN
@@ -509,6 +513,7 @@ AS
 	END
 GO
 
+-- Store procedure para migrar piloto
 CREATE PROCEDURE AJO_DER.migrar_piloto
 AS
 	BEGIN
@@ -521,6 +526,7 @@ AS
 	END
 GO
 
+-- Store procedure para migrar auto
 CREATE PROCEDURE AJO_DER.migrar_auto
 AS
 	BEGIN
@@ -534,6 +540,7 @@ AS
 	END
 GO
 
+-- Store procedure para migrar incidente
 CREATE PROCEDURE AJO_DER.migrar_incidente
 AS
 	BEGIN
@@ -547,6 +554,7 @@ AS
 	END
 GO
 
+-- Store procedure para migrar incidente_auto
 CREATE PROCEDURE AJO_DER.migrar_incidente_auto
 AS
 	BEGIN
@@ -562,7 +570,7 @@ AS
 	END
 GO
 
--- Migrar circuito
+-- Store procedure para migrar circuito
 CREATE PROCEDURE AJO_DER.migrar_circuito
 AS
 	BEGIN
@@ -573,7 +581,7 @@ AS
 	END
 GO
 
--- Migrar sector
+-- Store procedure para migrar sector
 CREATE PROCEDURE AJO_DER.migrar_sector
 AS
 	BEGIN
@@ -586,7 +594,7 @@ AS
 	END
 GO
 
--- Migrar carrera
+-- Store procedure para migrar carrera
 CREATE PROCEDURE AJO_DER.migrar_carrera
 AS
 	BEGIN
@@ -598,7 +606,7 @@ AS
 	END
 GO
 
--- Migrar medicion
+-- Store procedure para migrar medicion
 CREATE PROCEDURE AJO_DER.migrar_medicion
 AS
 	BEGIN
@@ -614,7 +622,7 @@ AS
 	END
 GO
 
--- Migrar parada_box
+-- Store procedure para migrar parada_box
 CREATE PROCEDURE AJO_DER.migrar_parada_box
 AS
 	BEGIN
@@ -629,7 +637,7 @@ AS
 	END
 GO
 
---migracion de motor-- 
+-- Store procedure para migrar motor
 CREATE PROCEDURE AJO_DER.migrar_motores
 AS
 	BEGIN 	
@@ -642,6 +650,7 @@ AS
 	END
 GO
 
+-- Store procedure para migrar estado_de_motor
 CREATE PROCEDURE AJO_DER.migrar_estado_de_motor
 AS
 	BEGIN 	
@@ -655,6 +664,7 @@ AS
   END
 GO
 
+-- Store procedure para migrar caja_de_cambios
 CREATE PROCEDURE AJO_DER.migrar_caja_de_cambios
 AS
 	BEGIN
@@ -667,6 +677,7 @@ AS
 	END
 GO
 
+-- Store procedure para migrar estado_de_caja_de_cambios
 CREATE PROCEDURE AJO_DER.migrar_estado_de_caja_de_cambios
 AS
 	BEGIN 	
@@ -680,6 +691,7 @@ AS
 	END
 GO
 
+-- Store procedure para migrar posicion
 CREATE PROCEDURE AJO_DER.migrar_posiciones
 AS
 	BEGIN 	
@@ -701,6 +713,7 @@ AS
 	END
 GO
 
+-- Store procedure para migrar freno
 CREATE PROCEDURE AJO_DER.migrar_frenos
 AS
 	BEGIN 	
@@ -738,6 +751,7 @@ AS
 	END
 GO
 
+-- Store procedure para migrar estado_freno
 CREATE PROCEDURE AJO_DER.migrar_estado_de_freno
 AS
 	BEGIN
@@ -775,6 +789,7 @@ AS
 	END
 GO
 
+-- Store procedure para migrar tipo_neumatico
 CREATE PROCEDURE AJO_DER.migrar_tipo_neumatico
 AS
 	BEGIN 	
@@ -784,6 +799,7 @@ AS
 	END
 GO
 
+-- Store procedure para migrar neumatico
 CREATE PROCEDURE AJO_DER.migrar_neumaticos
 AS
 	BEGIN 	
@@ -825,7 +841,7 @@ AS
 	END
 GO
 
--- Migrar cambio_neumaticos
+-- Store procedure para migrar cambio_neumaticos
 CREATE PROCEDURE AJO_DER.migrar_cambio_neumaticos
 AS
 	BEGIN
@@ -879,6 +895,7 @@ AS
 	END
 GO
 
+-- Store procedure para migrar estado_neumatico
 CREATE PROCEDURE AJO_DER.migrar_estado_neumaticos
 AS
 	BEGIN 	
@@ -916,7 +933,7 @@ AS
 	END
 GO
 
--- Ejecutar migraciones
+-- Store procedure para iniciar migraciones
 CREATE PROCEDURE AJO_DER.migrar_tablas
 AS
 	BEGIN
