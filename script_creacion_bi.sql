@@ -1,7 +1,17 @@
+-- Eliminacion de funciones si existen
+IF OBJECT_ID('AJO_DER.mejor_tiempo_de_vuelta_de_cada_escuderia', 'F') IS NOT NULL
+	DROP FUNCTION AJO_DER.mejor_tiempo_de_vuelta_de_cada_escuderia
+IF OBJECT_ID('AJO_DER.máxima_velocidad_alcanzada_por_cada_auto', 'F') IS NOT NULL
+	DROP FUNCTION AJO_DER.máxima_velocidad_alcanzada_por_cada_auto
+IF OBJECT_ID('AJO_DER.cantidad_de_paradas_por_circuito', 'F') IS NOT NULL
+	DROP FUNCTION AJO_DER.cantidad_de_paradas_por_circuito
+IF OBJECT_ID('AJO_DER.Tiempo_promedio_que_tardo_cada_escuderia', 'F') IS NOT NULL
+	DROP FUNCTION AJO_DER.Tiempo_promedio_que_tardo_cada_escuderia
+
 --- Mejor tiempo de vuelta de cada escudería por circuito por año.
 --El mejor tiempo está dado por el mínimo tiempo en que un auto logra
 --realizar una vuelta de un circuito.
-CREATE OR ALTER FUNCTION AJO_DER.mejor_tiempo_de_vuelta_de_cada_escudería()
+CREATE FUNCTION AJO_DER.mejor_tiempo_de_vuelta_de_cada_escuderia()
 RETURNS @Result TABLE ( tiempo_vuelta decimal(18,10), escuderia_nombre nvarchar(255),circuito_nombre nvarchar(255), año nvarchar(255) )
 AS
 BEGIN
@@ -17,15 +27,13 @@ BEGIN
 	inner join AJO_DER.escuderia escuderia on escuderia.id=auto.id_escuderia
 	inner join AJO_DER.carrera  carrera on carrera.id=medicion.id_carrera
 	inner join AJO_DER.circuito  circuito on circuito.id=medicion.id_carrera
-	group by auto.numero_auto, medicion.tiempo_vuelta,escuderia.nombre,circuito.nombre,carrera.fecha
+	group by medicion.tiempo_vuelta,escuderia.nombre,circuito.nombre,carrera.fecha
 	order by medicion.tiempo_vuelta
 RETURN 
 END
-
-
-
+GO
 --- Máxima velocidad alcanzada por cada auto en cada tipo de sector de cada circuito. (agrupar por sector y decorar un poco el resultado)
-CREATE OR ALTER FUNCTION AJO_DER.máxima_velocidad_alcanzada_por_cada_auto()
+CREATE FUNCTION AJO_DER.máxima_velocidad_alcanzada_por_cada_auto()
 RETURNS @Result TABLE ( velocidad decimal(18,10), sector int,circuito_nombre nvarchar(255), id_tipo_sector int,  numero_auto int)
 AS
 BEGIN
@@ -46,19 +54,18 @@ BEGIN
 	order by medicion.velocidad desc
 RETURN 
 END
-
-
+GO
 --- Cantidad de paradas por circuito por escudería por año.
-CREATE OR ALTER FUNCTION AJO_DER.cantidad_de_paradas_por_circuito()
+CREATE FUNCTION AJO_DER.cantidad_de_paradas_por_circuito()
 RETURNS @Result TABLE ( paradas int, circuito_nombre nvarchar(255), escuderia_nombre nvarchar(255), año nvarchar(255))
 AS
 BEGIN
 	Insert into @Result (paradas,circuito_nombre,escuderia_nombre,año)
 	select	
-	count(parada.id),
+	count(parada.id) [cantida de paradas],
 	circuito.nombre,
 	escuderia.nombre,
-	year(carrera.fecha)
+	year(carrera.fecha) [fecha]
 	from 
 	AJO_DER.medicion medicion
 	inner join AJO_DER.auto auto on auto.id=medicion.id_auto
@@ -66,31 +73,32 @@ BEGIN
 	inner join AJO_DER.carrera  carrera on carrera.id=medicion.id_carrera
 	inner join AJO_DER.circuito  circuito on circuito.id=medicion.id_carrera
 	inner join AJO_DER.parada_box parada on parada.id_carrera=carrera.id
-	group by parada.id, circuito.nombre,escuderia.nombre,carrera.fecha
+	group by circuito.nombre,escuderia.nombre,carrera.fecha
 RETURN 
 END
-
+GO
 --Tiempo promedio que tardó cada escudería en las paradas por cuatrimestre
-CREATE OR ALTER FUNCTION AJO_DER.cantidad_de_paradas_por_circuito()
-RETURNS @Result TABLE ( )
+CREATE FUNCTION AJO_DER.Tiempo_promedio_que_tardo_cada_escuderia()
+RETURNS @Result TABLE (escuderia_nombre nvarchar(255),promedio_tiempo_parada decimal(18,10), cuatrimestre int )
 AS
 BEGIN
-	--Insert into @Result (paradas,circuito_nombre,escuderia_nombre,año)
-	select	
-	count(parada.id),
-	parada.
-	from 
-	AJO_DER.medicion medicion
+	Insert into @Result (escuderia_nombre,promedio_tiempo_parada,cuatrimestre)
+	select
+	escuderia.nombre,
+	AVG(parada.tiempo_parada),
+	DATENAME(quarter,carrera.fecha)
+	from AJO_DER.medicion medicion
 	inner join AJO_DER.auto auto on auto.id=medicion.id_auto
 	inner join AJO_DER.escuderia escuderia on escuderia.id=auto.id_escuderia
 	inner join AJO_DER.carrera  carrera on carrera.id=medicion.id_carrera
 	inner join AJO_DER.circuito  circuito on circuito.id=medicion.id_carrera
 	inner join AJO_DER.parada_box parada on parada.id_carrera=carrera.id
-	group by parada.id, circuito.nombre,escuderia.nombre,carrera.fecha
+	group by escuderia.nombre,DATENAME(quarter,carrera.fecha)
 RETURN 
 END
-
+GO
 
 select * from AJO_DER.cantidad_de_paradas_por_circuito()	
 select * from AJO_DER.máxima_velocidad_alcanzada_por_cada_auto()
 select * from AJO_DER.mejor_tiempo_de_vuelta_de_cada_escudería()
+select * from AJO_DER.Tiempo_promedio_que_tardo_cada_escuderia()
