@@ -22,9 +22,9 @@ BEGIN
 RETURN 
 END
 
---select * from AJO_DER.mejor_tiempo_de_vuelta_de_cada_escudería()
 
---- Máxima velocidad alcanzada por cada auto en cada tipo de sector de cada circuito.
+
+--- Máxima velocidad alcanzada por cada auto en cada tipo de sector de cada circuito. (agrupar por sector y decorar un poco el resultado)
 CREATE OR ALTER FUNCTION AJO_DER.máxima_velocidad_alcanzada_por_cada_auto()
 RETURNS @Result TABLE ( velocidad decimal(18,10), sector int,circuito_nombre nvarchar(255), id_tipo_sector int,  numero_auto int)
 AS
@@ -47,7 +47,6 @@ BEGIN
 RETURN 
 END
 
---select * from AJO_DER.máxima_velocidad_alcanzada_por_cada_auto()
 
 --- Cantidad de paradas por circuito por escudería por año.
 CREATE OR ALTER FUNCTION AJO_DER.cantidad_de_paradas_por_circuito()
@@ -71,4 +70,6 @@ BEGIN
 RETURN 
 END
 
---select * from AJO_DER.cantidad_de_paradas_por_circuito()	
+select * from AJO_DER.cantidad_de_paradas_por_circuito()	
+select * from AJO_DER.máxima_velocidad_alcanzada_por_cada_auto()
+select * from AJO_DER.mejor_tiempo_de_vuelta_de_cada_escudería()
