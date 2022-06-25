@@ -70,6 +70,27 @@ BEGIN
 RETURN 
 END
 
+--Tiempo promedio que tardó cada escudería en las paradas por cuatrimestre
+CREATE OR ALTER FUNCTION AJO_DER.cantidad_de_paradas_por_circuito()
+RETURNS @Result TABLE ( )
+AS
+BEGIN
+	--Insert into @Result (paradas,circuito_nombre,escuderia_nombre,año)
+	select	
+	count(parada.id),
+	parada.
+	from 
+	AJO_DER.medicion medicion
+	inner join AJO_DER.auto auto on auto.id=medicion.id_auto
+	inner join AJO_DER.escuderia escuderia on escuderia.id=auto.id_escuderia
+	inner join AJO_DER.carrera  carrera on carrera.id=medicion.id_carrera
+	inner join AJO_DER.circuito  circuito on circuito.id=medicion.id_carrera
+	inner join AJO_DER.parada_box parada on parada.id_carrera=carrera.id
+	group by parada.id, circuito.nombre,escuderia.nombre,carrera.fecha
+RETURN 
+END
+
+
 select * from AJO_DER.cantidad_de_paradas_por_circuito()	
 select * from AJO_DER.máxima_velocidad_alcanzada_por_cada_auto()
 select * from AJO_DER.mejor_tiempo_de_vuelta_de_cada_escudería()
