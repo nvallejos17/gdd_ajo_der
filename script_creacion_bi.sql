@@ -1,13 +1,14 @@
 -- Eliminacion de funciones si existen
-IF OBJECT_ID('AJO_DER.mejor_tiempo_de_vuelta_de_cada_escuderia', 'F') IS NOT NULL
+IF OBJECT_ID('AJO_DER.mejor_tiempo_de_vuelta_de_cada_escuderia') IS NOT NULL
 	DROP FUNCTION AJO_DER.mejor_tiempo_de_vuelta_de_cada_escuderia
-IF OBJECT_ID('AJO_DER.máxima_velocidad_alcanzada_por_cada_auto', 'F') IS NOT NULL
+IF OBJECT_ID('AJO_DER.máxima_velocidad_alcanzada_por_cada_auto') IS NOT NULL
 	DROP FUNCTION AJO_DER.máxima_velocidad_alcanzada_por_cada_auto
-IF OBJECT_ID('AJO_DER.cantidad_de_paradas_por_circuito', 'F') IS NOT NULL
+IF OBJECT_ID('AJO_DER.cantidad_de_paradas_por_circuito') IS NOT NULL
 	DROP FUNCTION AJO_DER.cantidad_de_paradas_por_circuito
-IF OBJECT_ID('AJO_DER.Tiempo_promedio_que_tardo_cada_escuderia', 'F') IS NOT NULL
+IF OBJECT_ID('AJO_DER.Tiempo_promedio_que_tardo_cada_escuderia') IS NOT NULL
 	DROP FUNCTION AJO_DER.Tiempo_promedio_que_tardo_cada_escuderia
 
+GO
 --- Mejor tiempo de vuelta de cada escudería por circuito por año.
 --El mejor tiempo está dado por el mínimo tiempo en que un auto logra
 --realizar una vuelta de un circuito.
