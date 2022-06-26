@@ -349,8 +349,8 @@ GO
 -- Desgaste promedio de cada componente de cada auto por vuelta por circuito.
 CREATE VIEW AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito AS
 SELECT
-	AVG(1) 'Desgaste Promedio',
-	(1) 'Componente', 
+	AVG(1) 'Desgaste Promedio',--(TODO)
+	(1) 'Componente', --(TODO)
 	id_auto, BI_DIM_auto.modelo 'Modelo del auto', nro_vuelta, BI_DIM_circuito.nombre 'Circuito'
 FROM AJO_DER.BI_FACT_medicion
 	JOIN AJO_DER.BI_DIM_auto ON id_auto = BI_DIM_auto.id
