@@ -183,23 +183,17 @@ GROUP BY id_auto, nro_vuelta, id_circuito
 ORDER BY id_circuito, nro_vuelta, id_auto
 GO
 
-CREATE FUNCTION AJO_DER.BI_obtener_desgaste_promedio_neumaticos(@auto INT, @nro_vuelta DECIMAL(18,0),@circuito INT)
-RETURNS INT
+CREATE FUNCTION AJO_DER.BI_obtener_desgaste_promedio_neumaticos()
+RETURNS @Result TABLE ( neumatico_profundidad DECIMAL(18,10) )
 AS
 BEGIN
-	RETURN(
-		SELECT profundidad_neumatico_1 profundidad_inicial FROM AJO_DER.BI_FACT_medicion
-		WHERE codigo_medicion in (SELECT codigo_medicion FROM AJO_DER.BI_FACT_medicion
-								WHERE cant_combustible = (SELECT combustible_max FROM #combustible_max_min
-														WHERE id_auto = @auto AND nro_vuelta = @nro_vuelta 
-														AND id_circuito = @circuito
-														)
-								AND id_auto = @auto AND nro_vuelta = @nro_vuelta AND id_circuito = @circuito
-								)
-
-		--@diferencia_1 = profundidad_inicial - profundidad_final --(TODO)
-		)
-RETURN --(TODO)
+	INSERT INTO @Result (neumatico_profundidad)
+	SELECT 
+	AVG(neumatico.profundidad)
+	FROM 
+	AJO_DER.BI_FACT_medicion medicion
+	INNER JOIN AJO_DER.estado_neumatico neumatico on neumatico.id_medicion=medicion.id	
+RETURN 
 END
 GO
 
