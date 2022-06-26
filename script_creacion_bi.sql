@@ -7,6 +7,9 @@ IF OBJECT_ID('AJO_DER.cantidad_de_paradas_por_circuito') IS NOT NULL
 	DROP FUNCTION AJO_DER.cantidad_de_paradas_por_circuito
 IF OBJECT_ID('AJO_DER.Tiempo_promedio_que_tardo_cada_escuderia') IS NOT NULL
 	DROP FUNCTION AJO_DER.Tiempo_promedio_que_tardo_cada_escuderia
+IF OBJECT_ID('AJO_DER.poromedio_incidentes_escuderia_anio_tipo_de_sector') IS NOT NULL
+	DROP FUNCTION AJO_DER.poromedio_incidentes_escuderia_anio_tipo_de_sector
+
 
 GO
 --- Mejor tiempo de vuelta de cada escudería por circuito por año.
@@ -99,7 +102,36 @@ RETURN
 END
 GO
 
+--Promedio de incidentes que presenta cada escudería por año en los distintos tipo de sectores
+CREATE FUNCTION AJO_DER.poromedio_incidentes_escuderia_anio_tipo_de_sector()
+RETURNS @Result TABLE (sector_codigo int,carrera_fecha nvarchar(255), escuderia_nombre varchar(255),promedio_incidentes decimal(18,2) )
+AS
+BEGIN
+	Insert into @Result (sector_codigo,carrera_fecha,escuderia_nombre,promedio_incidentes)
+	select
+	sector.codigo,	
+	year(carrera.fecha),
+	escuderia.nombre,
+	(count(*)/(	
+						SELECT COUNT(*) 
+						from  AJO_DER.incidente i
+						where i.id_sector =sector.codigo)
+	) as promedio
+	from AJO_DER.medicion medicion
+	inner join AJO_DER.auto auto on auto.id=medicion.id_auto
+	inner join AJO_DER.escuderia escuderia on escuderia.id=auto.id_escuderia
+	inner join AJO_DER.carrera  carrera on carrera.id=medicion.id_carrera
+	inner join AJO_DER.circuito  circuito on circuito.id=medicion.id_carrera
+	inner join AJO_DER.sector sector on sector.id=medicion.id_sector
+	inner join AJO_DER.incidente incidente on incidente.id_sector=sector.id
+	group by escuderia.nombre,carrera.fecha,sector.codigo
+RETURN 
+END
+GO
+
+
 select * from AJO_DER.cantidad_de_paradas_por_circuito()	
 select * from AJO_DER.máxima_velocidad_alcanzada_por_cada_auto()
 select * from AJO_DER.mejor_tiempo_de_vuelta_de_cada_escudería()
 select * from AJO_DER.Tiempo_promedio_que_tardo_cada_escuderia()
+select * from AJO_DER.poromedio_incidentes_escuderia_anio_tipo_de_sector()
