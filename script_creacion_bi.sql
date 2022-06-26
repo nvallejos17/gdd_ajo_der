@@ -38,10 +38,10 @@ BEGIN
 	year(carrera.fecha)
 	FROM 
 	AJO_DER.medicion medicion
-	inner join AJO_DER.auto auto ON auto.id=medicion.id_auto
-	inner join AJO_DER.escuderia escuderia ON escuderia.id=auto.id_escuderia
-	inner join AJO_DER.carrera  carrera ON carrera.id=medicion.id_carrera
-	inner join AJO_DER.circuito  circuito ON circuito.id=medicion.id_carrera
+	INNER JOIN AJO_DER.auto auto ON auto.id=medicion.id_auto
+	INNER JOIN AJO_DER.escuderia escuderia ON escuderia.id=auto.id_escuderia
+	INNER JOIN AJO_DER.carrera  carrera ON carrera.id=medicion.id_carrera
+	INNER JOIN AJO_DER.circuito  circuito ON circuito.id=medicion.id_carrera
 	GROUP BY medicion.tiempo_vuelta,escuderia.nombre,circuito.nombre,carrera.fecha
 	ORDER BY medicion.tiempo_vuelta
 RETURN 
@@ -91,10 +91,10 @@ BEGIN
 	auto.numero_auto	
 	FROM 
 	AJO_DER.medicion medicion
-	inner join AJO_DER.auto auto ON auto.id=medicion.id_auto
-	inner join AJO_DER.carrera  carrera ON carrera.id=medicion.id_carrera
-	inner join AJO_DER.circuito  circuito ON circuito.id=medicion.id_carrera
-	inner join AJO_DER.sector sector ON circuito.id=medicion.id_carrera
+	INNER JOIN AJO_DER.auto auto ON auto.id=medicion.id_auto
+	INNER JOIN AJO_DER.carrera  carrera ON carrera.id=medicion.id_carrera
+	INNER JOIN AJO_DER.circuito  circuito ON circuito.id=medicion.id_carrera
+	INNER JOIN AJO_DER.sector sector ON circuito.id=medicion.id_carrera
 	GROUP BY auto.numero_auto, medicion.velocidad,sector.id_tipo_sector,medicion.id_sector,circuito.nombre
 	ORDER BY medicion.velocidad DESC
 RETURN 
@@ -112,11 +112,11 @@ BEGIN
 	AVG(parada.tiempo_parada),
 	DATENAME(quarter,carrera.fecha)
 	FROM AJO_DER.medicion medicion
-	inner join AJO_DER.auto auto ON auto.id=medicion.id_auto
-	inner join AJO_DER.escuderia escuderia ON escuderia.id=auto.id_escuderia
-	inner join AJO_DER.carrera  carrera ON carrera.id=medicion.id_carrera
-	inner join AJO_DER.circuito  circuito ON circuito.id=medicion.id_carrera
-	inner join AJO_DER.parada_box parada ON parada.id_carrera=carrera.id
+	INNER JOIN AJO_DER.auto auto ON auto.id=medicion.id_auto
+	INNER JOIN AJO_DER.escuderia escuderia ON escuderia.id=auto.id_escuderia
+	INNER JOIN AJO_DER.carrera  carrera ON carrera.id=medicion.id_carrera
+	INNER JOIN AJO_DER.circuito  circuito ON circuito.id=medicion.id_carrera
+	INNER JOIN AJO_DER.parada_box parada ON parada.id_carrera=carrera.id
 	GROUP BY escuderia.nombre,DATENAME(quarter,carrera.fecha)
 RETURN 
 END
@@ -135,11 +135,11 @@ BEGIN
 	year(carrera.fecha) [fecha]
 	FROM 
 	AJO_DER.medicion medicion
-	inner join AJO_DER.auto auto ON auto.id=medicion.id_auto
-	inner join AJO_DER.escuderia escuderia ON escuderia.id=auto.id_escuderia
-	inner join AJO_DER.carrera  carrera ON carrera.id=medicion.id_carrera
-	inner join AJO_DER.circuito  circuito ON circuito.id=medicion.id_carrera
-	inner join AJO_DER.parada_box parada ON parada.id_carrera=carrera.id
+	INNER JOIN AJO_DER.auto auto ON auto.id=medicion.id_auto
+	INNER JOIN AJO_DER.escuderia escuderia ON escuderia.id=auto.id_escuderia
+	INNER JOIN AJO_DER.carrera  carrera ON carrera.id=medicion.id_carrera
+	INNER JOIN AJO_DER.circuito  circuito ON circuito.id=medicion.id_carrera
+	INNER JOIN AJO_DER.parada_box parada ON parada.id_carrera=carrera.id
 	GROUP BY circuito.nombre,escuderia.nombre,carrera.fecha
 RETURN 
 END
@@ -211,12 +211,12 @@ BEGIN
 						WHERE i.id_sector =sector.codigo)
 	) AS promedio
 	FROM AJO_DER.medicion medicion
-	inner join AJO_DER.auto auto ON auto.id=medicion.id_auto
-	inner join AJO_DER.escuderia escuderia ON escuderia.id=auto.id_escuderia
-	inner join AJO_DER.carrera  carrera ON carrera.id=medicion.id_carrera
-	inner join AJO_DER.circuito  circuito ON circuito.id=medicion.id_carrera
-	inner join AJO_DER.sector sector ON sector.id=medicion.id_sector
-	inner join AJO_DER.incidente incidente ON incidente.id_sector=sector.id
+	INNER JOIN AJO_DER.auto auto ON auto.id=medicion.id_auto
+	INNER JOIN AJO_DER.escuderia escuderia ON escuderia.id=auto.id_escuderia
+	INNER JOIN AJO_DER.carrera  carrera ON carrera.id=medicion.id_carrera
+	INNER JOIN AJO_DER.circuito  circuito ON circuito.id=medicion.id_carrera
+	INNER JOIN AJO_DER.sector sector ON sector.id=medicion.id_sector
+	INNER JOIN AJO_DER.incidente incidente ON incidente.id_sector=sector.id
 	GROUP BY escuderia.nombre,carrera.fecha,sector.codigo
 RETURN 
 END
