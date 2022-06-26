@@ -62,6 +62,9 @@ IF OBJECT_ID('AJO_DER.BI_obtener_cuatrimestre') IS NOT NULL
 IF OBJECT_ID('AJO_DER.BI_obtener_desgaste_promedio_neumaticos') IS NOT NULL
 	DROP FUNCTION AJO_DER.BI_obtener_desgaste_promedio_neumaticos
 
+IF OBJECT_ID('AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito') IS NOT NULL
+	DROP FUNCTION AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito
+
 GO
 
 --Creacion de tablas
@@ -198,7 +201,6 @@ END
 GO
 
 -- Carga de datos de auto
-
 INSERT INTO AJO_DER.BI_DIM_auto
 SELECT modelo, numero_auto
 FROM AJO_DER.auto
@@ -339,17 +341,25 @@ FROM AJO_DER.medicion
 DROP TABLE #medicion_aux
 GO
 
-
 -- Desgaste promedio de cada componente de cada auto por vuelta por circuito.
-CREATE VIEW AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito AS
-SELECT
-	AVG(1) 'Desgaste Promedio',--(TODO)
-	(1) 'Componente', --(TODO)
-	id_auto, BI_DIM_auto.modelo 'Modelo del auto', nro_vuelta, BI_DIM_circuito.nombre 'Circuito'
-FROM AJO_DER.BI_FACT_medicion
-	JOIN AJO_DER.BI_DIM_auto ON id_auto = BI_DIM_auto.id
-	JOIN AJO_DER.BI_DIM_circuito ON id_circuito = BI_DIM_circuito.id
-GROUP BY id_auto, nro_vuelta, id_circuito
+CREATE FUNCTION AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito()
+RETURNS @Result TABLE (desgaste_promedio DECIMAL(18,10), componente NVARCHAR(255),id_auto int, auto_modelo NVARCHAR(255),nro_vuelta int, circuito_nombre NVARCHAR(255) )
+AS
+BEGIN
+		INSERT INTO @Result (desgaste_promedio,componente,id_auto,auto_modelo,nro_vuelta,circuito_nombre)
+		SELECT
+			AVG(1) 'Desgaste Promedio',--(TODO)
+			(1) 'Componente', --(TODO)
+			medicion.id_auto, 
+			auto.modelo 'Modelo del auto', 
+			medicion.nro_vuelta, 
+			circuito.nombre 'Circuito'
+		FROM AJO_DER.BI_FACT_medicion medicion
+			JOIN AJO_DER.BI_DIM_auto auto ON auto.id=medicion.id_auto
+			JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id=medicion.id_circuito
+		GROUP BY medicion.id_auto, medicion.nro_vuelta, medicion.id_circuito,auto.modelo,circuito.nombre
+RETURN
+END
 GO
 
 DROP TABLE #combustible_max_min
