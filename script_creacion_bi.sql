@@ -550,17 +550,13 @@ GO
 
 SELECT * FROM AJO_DER.mejor_tiempo_de_vuelta_de_cada_escuderia()
 SELECT * FROM AJO_DER.circuitos_con_mayor_consumo_de_combustible_promedio()
+SELECT * FROM AJO_DER.circuitos_con_mayor_tiempo_en_paradas()
+
 SELECT * FROM AJO_DER.maxima_velocidad_alcanzada_por_cada_auto()
 SELECT * FROM AJO_DER.tiempo_promedio_que_tardo_cada_escuderia()
 SELECT * FROM AJO_DER.cantidad_de_paradas_por_circuito()
-SELECT * FROM AJO_DER.circuitos_con_mayor_tiempo_en_paradas()
-SELECT * FROM AJO_DER.circuitos_mas_peligrosos_del_anio()
-SELECT * FROM AJO_DER.promedio_incidentes_escuderia_anio_tipo_de_sector()--SELECT * FROM AJO_DER.mejor_tiempo_de_vuelta_de_cada_escuderia()
-SELECT * FROM AJO_DER.circuitos_con_mayor_consumo_de_combustible_promedio()
-SELECT * FROM AJO_DER.maxima_velocidad_alcanzada_por_cada_auto()
-SELECT * FROM AJO_DER.tiempo_promedio_que_tardo_cada_escuderia()
-SELECT * FROM AJO_DER.cantidad_de_paradas_por_circuito()
-SELECT * FROM AJO_DER.circuitos_con_mayor_tiempo_en_paradas()
+
 SELECT * FROM AJO_DER.circuitos_mas_peligrosos_del_anio()
 SELECT * FROM AJO_DER.promedio_incidentes_escuderia_anio_tipo_de_sector()
+SELECT * FROM AJO_DER.tiempo_promedio_que_tardo_cada_escuderia()
 
