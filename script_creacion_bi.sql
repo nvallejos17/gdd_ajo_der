@@ -348,7 +348,7 @@ AS
 BEGIN
 		INSERT INTO @Result (desgaste_promedio,componente,id_auto,auto_modelo,nro_vuelta,circuito_nombre)
 		SELECT
-			AVG(1) 'Desgaste Promedio',--(TODO)
+			AVG(medicion.desgaste_caja_de_cambios) 'Desgaste Promedio',
 			(1) 'Componente', --(TODO)
 			medicion.id_auto, 
 			auto.modelo 'Modelo del auto', 
@@ -464,7 +464,7 @@ AS
 BEGIN
 	INSERT INTO @Result (paradas,circuito_nombre,escuderia_nombre,año)
 	SELECT	
-	count(*),--(TODO)
+	count(*),
 	circuito.nombre,
 	escuderia.nombre,
 	tiempo.anio 
@@ -542,17 +542,9 @@ BEGIN
 	INNER JOIN AJO_DER.BI_DIM_auto auto ON auto.id=medicion.id_auto
 	INNER JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id=medicion.id_escuderia
 	INNER JOIN AJO_DER.BI_DIM_circuito  circuito ON circuito.id=medicion.id_circuito
-	INNER JOIN AJO_DER.BI_DIM_tiempo  fecha ON fecha.id=medicion.id_tiempo
+	INNER JOIN AJO_DER.BI_DIM_tiempo  fecha ON fecha.id=medicion.id_tiempo	
 	GROUP BY escuderia.nombre,fecha.anio,medicion.id_tipo_sector
 RETURN 
 END
 GO
 
---SELECT * FROM AJO_DER.mejor_tiempo_de_vuelta_de_cada_escuderia()
---SELECT * FROM AJO_DER.circuitos_con_mayor_consumo_de_combustible_promedio()
---SELECT * FROM AJO_DER.maxima_velocidad_alcanzada_por_cada_auto()
---SELECT * FROM AJO_DER.tiempo_promedio_que_tardo_cada_escuderia()
---SELECT * FROM AJO_DER.cantidad_de_paradas_por_circuito()
---SELECT * FROM AJO_DER.circuitos_con_mayor_tiempo_en_paradas()
---SELECT * FROM AJO_DER.circuitos_mas_peligrosos_del_anio()
---SELECT * FROM AJO_DER.promedio_incidentes_escuderia_anio_tipo_de_sector()
