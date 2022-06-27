@@ -595,20 +595,18 @@ GO
 
 -- Promedio de incidentes que presenta cada escudería por año en los distintos tipo de sectores
 CREATE FUNCTION AJO_DER.promedio_incidentes_escuderia_anio_tipo_de_sector()
-RETURNS @Result TABLE (promedio_incidentes DECIMAL(18,10), escuderia varchar(255), anio NVARCHAR(255), tipo_sector NVARCHAR(255) )
+RETURNS @Result TABLE (promedio_incidentes DECIMAL(18,5), escuderia NVARCHAR(255), anio INT )
 AS
 BEGIN
 	INSERT INTO @Result
 	SELECT
-		COUNT(*) AS 'promedio_incidentes',
-		escuderia.nombre AS 'escuderia',
-		fecha.anio AS 'anio',
-		tipo_sector.tipo AS 'tipo_sector'
+		COUNT(*) * 1.0 / (SELECT COUNT(*) FROM AJO_DER.BI_DIM_tipo_sector),
+		escuderia.nombre,
+		fecha.anio
 	FROM AJO_DER.BI_FACT_incidente_auto incidente_auto
 		JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id = incidente_auto.id_escuderia
 		JOIN AJO_DER.BI_DIM_tiempo fecha ON fecha.id = incidente_auto.id_tiempo
-		JOIN AJO_DER.BI_DIM_tipo_sector tipo_sector ON tipo_sector.id = incidente_auto.id_tipo_sector
-	GROUP BY escuderia.nombre, fecha.anio, tipo_sector.tipo
+	GROUP BY escuderia.nombre, fecha.anio
 	ORDER BY fecha.anio, escuderia.nombre
 RETURN 
 END
