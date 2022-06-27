@@ -564,25 +564,25 @@ GO
 
 -- Los 3 circuitos más peligrosos del año, en función mayor cantidad de incidentes
 CREATE FUNCTION AJO_DER.circuitos_mas_peligrosos_del_anio()
-RETURNS @Result TABLE (id_circuito INT, anio INT, cant_incidentes INT)
+RETURNS @Result TABLE (circuito NVARCHAR(255), anio INT, cant_incidentes INT)
 AS
 BEGIN
-	DECLARE @IncidentesPorCircuito TABLE (id_circuito INT, anio INT, cant_incidentes INT)
+	DECLARE @IncidentesPorCircuito TABLE (circuito NVARCHAR(255), anio INT, cant_incidentes INT)
 
-	INSERT INTO @IncidentesPorCircuito (id_circuito, anio, cant_incidentes)
-	SELECT 
-		id_circuito,		
+	INSERT INTO @IncidentesPorCircuito
+	SELECT
+		circuito.nombre,
 		fecha.anio,
-		COUNT(*) AS 'Cantidad de incidentes' --(TODO)
-	FROM AJO_DER.BI_FACT_medicion medicion
-	JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id = medicion.id_circuito
-	JOIN AJO_DER.BI_DIM_tiempo fecha ON fecha.id = medicion.id_tiempo
-	GROUP BY id_circuito, fecha.anio
+		COUNT(incidente_auto.id) AS 'Cantidad de incidentes'
+	FROM AJO_DER.BI_FACT_incidente_auto incidente_auto
+		JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id = incidente_auto.id_circuito
+		JOIN AJO_DER.BI_DIM_tiempo fecha ON fecha.id = incidente_auto.id_tiempo
+	GROUP BY circuito.nombre, fecha.anio
 	ORDER BY 'Cantidad de incidentes' DESC
 
-	INSERT INTO @Result (id_circuito, anio, cant_incidentes)
+	INSERT INTO @Result
 	SELECT
-		id_circuito,		
+		circuito,
 		anio,
 		cant_incidentes
 	FROM (
