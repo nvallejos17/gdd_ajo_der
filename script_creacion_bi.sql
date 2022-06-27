@@ -547,17 +547,17 @@ GO
 
 -- Los 3 circuitos donde se consume mayor cantidad en tiempo de paradas en boxes
 CREATE FUNCTION AJO_DER.circuitos_con_mayor_tiempo_en_paradas()
-RETURNS @Result TABLE (id_circuito INT, tiempo_total_paradas INT)
+RETURNS @Result TABLE (circuito NVARCHAR(255), tiempo_total_paradas DECIMAL(18,2))
 AS
 BEGIN
-	INSERT INTO @Result (id_circuito, tiempo_total_paradas)
-	SELECT TOP 3		
-		medicion.id_circuito,
-		SUM(1) AS 'Tiempo total en paradas' --(TODO)
-	FROM AJO_DER.BI_FACT_medicion medicion
-	JOIN AJO_DER.BI_DIM_circuito ON AJO_DER.BI_DIM_circuito.id =medicion.id_circuito
-	GROUP BY id_circuito
-	ORDER BY 'Tiempo total en paradas' DESC
+	INSERT INTO @Result
+	SELECT TOP 3
+		circuito.nombre AS 'circuito',
+		SUM(parada_box.tiempo_parada) AS 'Tiempo total en paradas'
+	FROM AJO_DER.BI_FACT_parada_box parada_box
+		JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id = parada_box.id_circuito
+	GROUP BY circuito.nombre
+	ORDER BY SUM(parada_box.tiempo_parada) DESC
 RETURN 
 END
 GO
