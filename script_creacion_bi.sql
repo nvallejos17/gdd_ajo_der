@@ -531,17 +531,16 @@ AS
 BEGIN
 	INSERT INTO @Result (paradas,circuito_nombre,escuderia_nombre,año)
 	SELECT	
-	count(*),
-	circuito.nombre,
-	escuderia.nombre,
-	tiempo.anio 
+	count(*) AS 'cantidad_de_paradas',
+	circuito.nombre AS 'circuito',
+	escuderia.nombre AS 'escuderia',
+	tiempo.anio AS 'año'
 	FROM 
-	AJO_DER.BI_FACT_medicion medicion
-	INNER JOIN AJO_DER.BI_DIM_auto auto ON auto.id=medicion.id_auto
-	INNER JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id=medicion.id_escuderia
-	INNER JOIN AJO_DER.BI_DIM_circuito  circuito ON circuito.id=medicion.id_circuito
-	INNER JOIN AJO_DER.BI_DIM_tiempo tiempo ON tiempo.id=medicion.id_tiempo
-	GROUP BY circuito.nombre,escuderia.nombre,tiempo.anio
+	AJO_DER.BI_FACT_parada_box parada_box
+	JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id = parada_box.id_circuito
+	JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id = parada_box.id_escuderia
+	JOIN AJO_DER.BI_DIM_tiempo tiempo ON tiempo.id = parada_box.id_tiempo
+	GROUP BY circuito.nombre, escuderia.nombre, tiempo.anio
 RETURN 
 END
 GO
