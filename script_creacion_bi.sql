@@ -364,6 +364,30 @@ FROM AJO_DER.medicion
 DROP TABLE #medicion_aux
 GO
 
+-- Carga de datos de parada_box
+
+INSERT INTO AJO_DER.BI_FACT_parada_box
+SELECT BI_DIM_tiempo.id, carrera.id_circuito, auto.id_escuderia, tiempo_parada
+FROM AJO_DER.parada_box
+	JOIN AJO_DER.carrera ON parada_box.id_carrera = carrera.id
+	JOIN AJO_DER.BI_DIM_tiempo ON YEAR(carrera.fecha) = BI_DIM_tiempo.anio
+		AND AJO_DER.BI_obtener_cuatrimestre(carrera.fecha) = BI_DIM_tiempo.cuatrimestre
+	JOIN AJO_DER.auto ON parada_box.id_auto = auto.id
+
+-- Carga de datos de incidente_auto
+
+INSERT INTO AJO_DER.BI_FACT_incidente_auto
+SELECT BI_DIM_tiempo.id, carrera.id_circuito, auto.id_escuderia, sector.id_tipo_sector, id_tipo_incidente
+FROM AJO_DER.incidente_auto
+	JOIN AJO_DER.incidente ON incidente_auto.id_incidente = incidente.id
+	JOIN AJO_DER.carrera ON incidente.id_carrera = carrera.id
+	JOIN AJO_DER.BI_DIM_tiempo ON YEAR(carrera.fecha) = BI_DIM_tiempo.anio
+		AND AJO_DER.BI_obtener_cuatrimestre(carrera.fecha) = BI_DIM_tiempo.cuatrimestre
+	JOIN AJO_DER.auto ON incidente_auto.id_auto = auto.id
+	JOIN AJO_DER.sector ON incidente.id_sector = sector.id
+GO
+
+
 -- Desgaste promedio de cada componente de cada auto por vuelta por circuito.
 CREATE FUNCTION AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito()
 RETURNS @Result TABLE (desgaste_promedio DECIMAL(18,10), componente NVARCHAR(255),id_auto int, auto_modelo NVARCHAR(255),nro_vuelta int, circuito_nombre NVARCHAR(255) )
