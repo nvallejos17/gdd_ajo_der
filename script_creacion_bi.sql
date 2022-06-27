@@ -595,21 +595,21 @@ GO
 
 -- Promedio de incidentes que presenta cada escudería por año en los distintos tipo de sectores
 CREATE FUNCTION AJO_DER.promedio_incidentes_escuderia_anio_tipo_de_sector()
-RETURNS @Result TABLE (id_tipo_sector INT,carrera_fecha NVARCHAR(255), escuderia_nombre varchar(255),promedio_incidentes DECIMAL(18,2) )
+RETURNS @Result TABLE (promedio_incidentes DECIMAL(18,10), escuderia varchar(255), anio NVARCHAR(255), tipo_sector NVARCHAR(255) )
 AS
 BEGIN
-	INSERT INTO @Result (id_tipo_sector,carrera_fecha,escuderia_nombre,promedio_incidentes)
-	SELECT	
-	medicion.id_tipo_sector,
-	fecha.anio,
-	escuderia.nombre,
-	AVG(1) --(TODO)
-	FROM AJO_DER.BI_FACT_medicion medicion
-	INNER JOIN AJO_DER.BI_DIM_auto auto ON auto.id=medicion.id_auto
-	INNER JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id=medicion.id_escuderia
-	INNER JOIN AJO_DER.BI_DIM_circuito  circuito ON circuito.id=medicion.id_circuito
-	INNER JOIN AJO_DER.BI_DIM_tiempo  fecha ON fecha.id=medicion.id_tiempo	
-	GROUP BY escuderia.nombre,fecha.anio,medicion.id_tipo_sector
+	INSERT INTO @Result
+	SELECT
+		COUNT(*) AS 'promedio_incidentes',
+		escuderia.nombre AS 'escuderia',
+		fecha.anio AS 'anio',
+		tipo_sector.tipo AS 'tipo_sector'
+	FROM AJO_DER.BI_FACT_incidente_auto incidente_auto
+		JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id = incidente_auto.id_escuderia
+		JOIN AJO_DER.BI_DIM_tiempo fecha ON fecha.id = incidente_auto.id_tiempo
+		JOIN AJO_DER.BI_DIM_tipo_sector tipo_sector ON tipo_sector.id = incidente_auto.id_tipo_sector
+	GROUP BY escuderia.nombre, fecha.anio, tipo_sector.tipo
+	ORDER BY fecha.anio, escuderia.nombre
 RETURN 
 END
 GO
