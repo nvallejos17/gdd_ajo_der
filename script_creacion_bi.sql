@@ -223,6 +223,33 @@ RETURN
 END
 GO
 
+CREATE FUNCTION AJO_DER.tiempos_de_vuelta()
+	RETURNS @Result TABLE ( 
+		tiempo_vuelta DECIMAL(18,10), 
+		nro_vuelta DECIMAL(18,0),
+		Escuderia NVARCHAR(255), 
+		Circuito NVARCHAR(255), 
+		Año NVARCHAR(255) 
+	)
+AS
+BEGIN
+	INSERT INTO @Result
+	SELECT
+		MAX(medicion.tiempo_vuelta),
+		medicion.nro_vuelta,
+		escuderia.nombre,
+		circuito.nombre,
+		tiempo.anio
+	FROM AJO_DER.BI_FACT_medicion medicion
+		JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id = medicion.id_escuderia
+		JOIN AJO_DER.BI_DIM_circuito circuito on circuito.id = medicion.id_circuito
+		JOIN AJO_DER.BI_DIM_tiempo tiempo on tiempo.id = medicion.id_tiempo
+	GROUP BY medicion.nro_vuelta, escuderia.nombre, circuito.nombre, tiempo.anio
+	ORDER BY tiempo.anio, circuito.nombre, escuderia.nombre, medicion.nro_vuelta
+RETURN 
+END
+GO
+
 -- Carga de datos de auto
 INSERT INTO AJO_DER.BI_DIM_auto
 SELECT modelo, numero_auto
@@ -412,26 +439,22 @@ GO
 DROP TABLE #combustible_max_min
 GO
 
+
 -- Mejor tiempo de vuelta de cada escudería por circuito por año.
 -- El mejor tiempo está dado por el mínimo tiempo en que un auto logra realizar una vuelta de un circuito.
 CREATE FUNCTION AJO_DER.mejor_tiempo_de_vuelta_de_cada_escuderia()
 RETURNS @Result TABLE ( tiempo_vuelta DECIMAL(18,10), escuderia_nombre NVARCHAR(255),circuito_nombre NVARCHAR(255), año NVARCHAR(255) )
 AS
 BEGIN
-	INSERT INTO @Result (medicion.tiempo_vuelta,escuderia_nombre,circuito_nombre,año)
-	SELECT 
-	medicion.tiempo_vuelta,
-	escuderia.nombre,
-	circuito.nombre,
-	tiempo.anio
-	FROM 
-	AJO_DER.BI_FACT_medicion medicion
-	INNER JOIN AJO_DER.BI_DIM_auto auto ON auto.id=medicion.id_auto
-	INNER JOIN AJO_DER.BI_DIM_escuderia escuderia ON auto.id=medicion.id_auto
-	INNER JOIN AJO_DER.BI_DIM_circuito circuito on circuito.id=medicion.id_circuito
-	INNER JOIN AJO_DER.BI_DIM_tiempo tiempo on tiempo.id=medicion.id_tiempo
-	GROUP BY medicion.tiempo_vuelta,escuderia.nombre,circuito.nombre,tiempo.anio
-	ORDER BY medicion.tiempo_vuelta
+	INSERT INTO @Result
+	SELECT
+		MIN(tiempo_vuelta) mejor_tiempo_vuelta,
+		Escuderia,
+		Circuito,
+		Año
+	FROM AJO_DER.tiempos_de_vuelta()
+	GROUP BY Escuderia, Circuito, Año
+	ORDER BY Año, Circuito, Escuderia
 RETURN 
 END
 GO
