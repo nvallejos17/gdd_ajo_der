@@ -567,28 +567,24 @@ CREATE FUNCTION AJO_DER.circuitos_mas_peligrosos_del_anio()
 RETURNS @Result TABLE (circuito NVARCHAR(255), anio INT, cant_incidentes INT)
 AS
 BEGIN
-	DECLARE @IncidentesPorCircuito TABLE (circuito NVARCHAR(255), anio INT, cant_incidentes INT)
-
-	INSERT INTO @IncidentesPorCircuito
-	SELECT
-		circuito.nombre,
-		fecha.anio,
-		COUNT(incidente_auto.id) AS 'Cantidad de incidentes'
-	FROM AJO_DER.BI_FACT_incidente_auto incidente_auto
-		JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id = incidente_auto.id_circuito
-		JOIN AJO_DER.BI_DIM_tiempo fecha ON fecha.id = incidente_auto.id_tiempo
-	GROUP BY circuito.nombre, fecha.anio
-	ORDER BY 'Cantidad de incidentes' DESC
-
 	INSERT INTO @Result
 	SELECT
 		circuito,
 		anio,
-		cant_incidentes
+		cantidad_incidentes
 	FROM (
-		SELECT *, ROW_NUMBER() OVER (PARTITION BY anio ORDER BY cant_incidentes DESC) AS RN FROM @IncidentesPorCircuito
-	) AS TOP_3_ANUAL
-	WHERE RN <= 3
+		SELECT
+			circuito.nombre AS circuito,
+			fecha.anio,
+			COUNT(*) AS cantidad_incidentes,
+			ROW_NUMBER() OVER (PARTITION BY fecha.anio ORDER BY COUNT(*) DESC) AS ranking
+		FROM AJO_DER.BI_FACT_incidente_auto incidente_auto
+			JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id = incidente_auto.id_circuito
+			JOIN AJO_DER.BI_DIM_tiempo fecha ON fecha.id = incidente_auto.id_tiempo
+		GROUP BY circuito.nombre, fecha.anio
+	) AS ranking_incidentes_x_Circuito_x_anio
+	WHERE ranking_incidentes_x_Circuito_x_anio.ranking <= 3
+	ORDER BY cantidad_incidentes DESC
 RETURN 
 END
 GO
