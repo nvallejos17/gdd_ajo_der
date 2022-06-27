@@ -508,20 +508,18 @@ GO
 
 -- Tiempo promedio que tardó cada escudería en las paradas por cuatrimestre
 CREATE FUNCTION AJO_DER.tiempo_promedio_que_tardo_cada_escuderia()
-RETURNS @Result TABLE (escuderia_nombre NVARCHAR(255),promedio_tiempo_parada DECIMAL(18,10), cuatrimestre INT )
+RETURNS @Result TABLE (promedio_tiempo_parada DECIMAL(18,10), escuderia_nombre NVARCHAR(255), cuatrimestre INT )
 AS
 BEGIN
-	INSERT INTO @Result (escuderia_nombre,promedio_tiempo_parada,cuatrimestre)
+	INSERT INTO @Result
 	SELECT
-	escuderia.nombre,
-	AVG(1),--(TODO)
-	tiempo.cuatrimestre
-	FROM AJO_DER.BI_FACT_medicion medicion
-	INNER JOIN AJO_DER.BI_DIM_auto auto ON auto.id=medicion.id_auto
-	INNER JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id=medicion.id_escuderia
-	INNER JOIN AJO_DER.BI_DIM_circuito  circuito ON circuito.id=medicion.id_circuito	
-	INNER JOIN AJO_DER.BI_DIM_tiempo tiempo ON tiempo.id=medicion.id_tiempo
-	GROUP BY escuderia.nombre,tiempo.cuatrimestre
+		AVG(parada_box.tiempo_parada) promedio_tiempo_parada,
+		escuderia.nombre escuderia_nombre,
+		tiempo.cuatrimestre
+	FROM AJO_DER.BI_FACT_parada_box parada_box
+		JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id = parada_box.id_escuderia
+		JOIN AJO_DER.BI_DIM_tiempo tiempo ON tiempo.id = parada_box.id_tiempo
+	GROUP BY escuderia.nombre, tiempo.cuatrimestre
 RETURN 
 END
 GO
