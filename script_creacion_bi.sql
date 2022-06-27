@@ -280,10 +280,10 @@ CREATE TABLE #medicion_aux(
 	profundidad_neumatico_2 DECIMAL(18,6),
 	profundidad_neumatico_3 DECIMAL(18,6),
 	profundidad_neumatico_4 DECIMAL(18,6),
-	id_tipo_neumatico_1 INT REFERENCES AJO_DER.BI_DIM_tipo_neumatico, -- FK
-	id_tipo_neumatico_2 INT REFERENCES AJO_DER.BI_DIM_tipo_neumatico, -- FK
-	id_tipo_neumatico_3 INT REFERENCES AJO_DER.BI_DIM_tipo_neumatico, -- FK
-	id_tipo_neumatico_4 INT REFERENCES AJO_DER.BI_DIM_tipo_neumatico, -- FK
+	id_tipo_neumatico_1 INT,
+	id_tipo_neumatico_2 INT,
+	id_tipo_neumatico_3 INT,
+	id_tipo_neumatico_4 INT
 );
 go
 
@@ -486,23 +486,22 @@ RETURN
 END
 GO
 
--- Máxima velocidad alcanzada por cada auto en cada tipo de sector de cada circuito. (agrupar por sector y decorar un poco el resultado)
+-- Máxima velocidad alcanzada por cada auto en cada tipo de sector de cada circuito.
 CREATE FUNCTION AJO_DER.maxima_velocidad_alcanzada_por_cada_auto()
-RETURNS @Result TABLE ( velocidad DECIMAL(18,10), circuito_nombre NVARCHAR(255), numero_auto INT)
+RETURNS @Result TABLE ( velocidad_maxima DECIMAL(18,2), id_auto INT, tipo_sector NVARCHAR(255), circuito NVARCHAR(255))
 AS
 BEGIN
-	INSERT INTO @Result (velocidad,circuito_nombre,numero_auto)
+	INSERT INTO @Result
 	SELECT
-	medicion.velocidad,	
-	circuito.nombre,	
-	auto.numero_auto	
-	FROM 
-	AJO_DER.BI_FACT_medicion medicion
-	INNER JOIN AJO_DER.BI_DIM_auto auto ON auto.id=medicion.id_auto
-	INNER JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id=medicion.id_circuito
-	INNER JOIN AJO_DER.BI_DIM_tipo_sector sector ON circuito.id=medicion.id_circuito
-	GROUP BY auto.numero_auto, medicion.velocidad,circuito.nombre
-	ORDER BY medicion.velocidad DESC
+		MAX(medicion.velocidad) velocidad_maxima,
+		id_auto,	
+		tipo_sector.tipo tipo_sector,	
+		circuito.nombre circuito
+	FROM AJO_DER.BI_FACT_medicion medicion
+		JOIN AJO_DER.BI_DIM_tipo_sector tipo_sector ON tipo_sector.id = medicion.id_tipo_sector
+		JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id = medicion.id_circuito
+	GROUP BY id_auto, tipo_sector.tipo, circuito.nombre
+	ORDER BY circuito.nombre, tipo_sector.tipo, id_auto
 RETURN 
 END
 GO
@@ -620,13 +619,11 @@ GO
 
 SELECT * FROM AJO_DER.mejor_tiempo_de_vuelta_de_cada_escuderia()
 SELECT * FROM AJO_DER.circuitos_con_mayor_consumo_de_combustible_promedio()
-SELECT * FROM AJO_DER.circuitos_con_mayor_tiempo_en_paradas()
 
 SELECT * FROM AJO_DER.maxima_velocidad_alcanzada_por_cada_auto()
 SELECT * FROM AJO_DER.tiempo_promedio_que_tardo_cada_escuderia()
 SELECT * FROM AJO_DER.cantidad_de_paradas_por_circuito()
 
+SELECT * FROM AJO_DER.circuitos_con_mayor_tiempo_en_paradas()
 SELECT * FROM AJO_DER.circuitos_mas_peligrosos_del_anio()
 SELECT * FROM AJO_DER.promedio_incidentes_escuderia_anio_tipo_de_sector()
-SELECT * FROM AJO_DER.tiempo_promedio_que_tardo_cada_escuderia()
-
