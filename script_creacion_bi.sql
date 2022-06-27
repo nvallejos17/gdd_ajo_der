@@ -2,6 +2,15 @@ USE GD1C2022
 GO
 
 -- Eliminacion de tablas
+IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'BI_FACT_medicion')
+	DROP TABLE AJO_DER.BI_FACT_medicion
+
+IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'BI_FACT_parada_box')
+	DROP TABLE AJO_DER.BI_FACT_parada_box
+
+IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'BI_FACT_incidente_auto')
+	DROP TABLE AJO_DER.BI_FACT_incidente_auto
+
 IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'BI_DIM_auto')
 	DROP TABLE AJO_DER.BI_DIM_auto
 
@@ -25,12 +34,9 @@ IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'BI_DIM_tipo_sector')
 
 IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'BI_DIM_tiempo')
 	DROP TABLE AJO_DER.BI_DIM_tiempo
-
-IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'BI_FACT_medicion')
-	DROP TABLE AJO_DER.BI_FACT_medicion
-
-
 GO
+
+
 -- Eliminacion de funciones si existen
 IF OBJECT_ID('AJO_DER.mejor_tiempo_de_vuelta_de_cada_escuderia') IS NOT NULL
 	DROP FUNCTION AJO_DER.mejor_tiempo_de_vuelta_de_cada_escuderia
@@ -64,8 +70,8 @@ IF OBJECT_ID('AJO_DER.BI_obtener_desgaste_promedio_neumaticos') IS NOT NULL
 
 IF OBJECT_ID('AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito') IS NOT NULL
 	DROP FUNCTION AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito
-
 GO
+
 
 --Creacion de tablas
 CREATE TABLE AJO_DER.BI_DIM_auto (
@@ -143,6 +149,23 @@ CREATE TABLE AJO_DER.BI_FACT_medicion (
 	id_tipo_neumatico_2 INT REFERENCES AJO_DER.BI_DIM_tipo_neumatico, -- FK
 	id_tipo_neumatico_3 INT REFERENCES AJO_DER.BI_DIM_tipo_neumatico, -- FK
 	id_tipo_neumatico_4 INT REFERENCES AJO_DER.BI_DIM_tipo_neumatico, -- FK
+);
+
+CREATE TABLE AJO_DER.BI_FACT_parada_box (
+	id INT NOT NULL IDENTITY PRIMARY KEY,
+	id_tiempo INT REFERENCES AJO_DER.BI_DIM_tiempo, -- FK
+	id_circuito INT REFERENCES AJO_DER.BI_DIM_circuito, -- FK
+	id_escuderia INT REFERENCES AJO_DER.BI_DIM_escuderia, -- FK
+	tiempo_parada DECIMAL(18,2)
+);
+
+CREATE TABLE AJO_DER.BI_FACT_incidente_auto (
+	id INT NOT NULL IDENTITY PRIMARY KEY,
+	id_tiempo INT REFERENCES AJO_DER.BI_DIM_tiempo, -- FK
+	id_circuito INT REFERENCES AJO_DER.BI_DIM_circuito, -- FK
+	id_escuderia INT REFERENCES AJO_DER.BI_DIM_escuderia, -- FK
+	id_tipo_sector INT REFERENCES AJO_DER.BI_DIM_tipo_sector, -- FK
+	id_tipo_incidente INT REFERENCES AJO_DER.BI_DIM_tipo_incidente -- FK
 );
 GO
 
