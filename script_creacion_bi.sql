@@ -38,6 +38,9 @@ GO
 
 
 -- Eliminacion de funciones si existen
+IF OBJECT_ID('AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito') IS NOT NULL
+	DROP FUNCTION AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito
+
 IF OBJECT_ID('AJO_DER.mejor_tiempo_de_vuelta_de_cada_escuderia') IS NOT NULL
 	DROP FUNCTION AJO_DER.mejor_tiempo_de_vuelta_de_cada_escuderia
 
@@ -65,13 +68,12 @@ IF OBJECT_ID('AJO_DER.promedio_incidentes_escuderia_anio_tipo_de_sector') IS NOT
 IF OBJECT_ID('AJO_DER.BI_obtener_cuatrimestre') IS NOT NULL
 	DROP FUNCTION AJO_DER.BI_obtener_cuatrimestre
 
+IF OBJECT_ID('AJO_DER.BI_obtener_desgaste_promedio_frenos') IS NOT NULL
+	DROP FUNCTION AJO_DER.BI_obtener_desgaste_promedio_frenos
+
 IF OBJECT_ID('AJO_DER.BI_obtener_desgaste_promedio_neumaticos') IS NOT NULL
 	DROP FUNCTION AJO_DER.BI_obtener_desgaste_promedio_neumaticos
-
-IF OBJECT_ID('AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito') IS NOT NULL
-	DROP FUNCTION AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito
 GO
-
 
 --Creacion de tablas
 CREATE TABLE AJO_DER.BI_DIM_auto (
@@ -191,38 +193,51 @@ BEGIN
 END
 GO
 
-CREATE TABLE #combustible_max_min(
-	id INT NOT NULL IDENTITY PRIMARY KEY,
-	id_auto INT,
-	nro_vuelta DECIMAL(18,0),
-	id_circuito INT,
-	combustible_max DECIMAL(18,2),
-	combustible_min DECIMAL(18,2)
-);
-go
-
-INSERT INTO #combustible_max_min
-SELECT 
-	id_auto,
-	nro_vuelta,
-	id_circuito,
-	MAX(cant_combustible) combustible_max, 
-	MIN(cant_combustible) combustible_min
-FROM AJO_DER.BI_FACT_medicion
-GROUP BY id_auto, nro_vuelta, id_circuito
-ORDER BY id_circuito, nro_vuelta, id_auto
-GO
-
-CREATE FUNCTION AJO_DER.BI_obtener_desgaste_promedio_neumaticos()
-RETURNS @Result TABLE ( neumatico_profundidad DECIMAL(18,10) )
+CREATE FUNCTION AJO_DER.BI_obtener_desgaste_promedio_frenos(
+	@id_auto INT, @nro_vuelta INT, @id_circuito INT
+)
+RETURNS DECIMAL(18,6)
 AS
 BEGIN
-	INSERT INTO @Result (neumatico_profundidad)
-	SELECT 
-		AVG(neumatico.profundidad)
-	FROM AJO_DER.BI_FACT_medicion medicion
-		JOIN AJO_DER.estado_neumatico neumatico on neumatico.id_medicion = medicion.id	
-RETURN 
+	RETURN (
+		SELECT
+			(MAX(medicion.grosor_pastilla_freno_1) - MIN(medicion.grosor_pastilla_freno_1) +
+			 MAX(medicion.grosor_pastilla_freno_2) - MIN(medicion.grosor_pastilla_freno_2) +
+			 MAX(medicion.grosor_pastilla_freno_3) - MIN(medicion.grosor_pastilla_freno_3) +
+			 MAX(medicion.grosor_pastilla_freno_4) - MIN(medicion.grosor_pastilla_freno_4)
+			 ) / 4
+		FROM AJO_DER.BI_FACT_medicion medicion
+		WHERE medicion.id_auto = @id_auto
+			AND medicion.nro_vuelta = @nro_vuelta
+			AND medicion.id_circuito = @id_circuito
+		GROUP BY medicion.id_auto,
+			medicion.nro_vuelta,
+			medicion.id_circuito
+	)
+END
+GO
+
+CREATE FUNCTION AJO_DER.BI_obtener_desgaste_promedio_neumaticos(
+	@id_auto INT, @nro_vuelta INT, @id_circuito INT
+)
+RETURNS DECIMAL(18,6)
+AS
+BEGIN
+	RETURN (
+		SELECT
+			(MAX(medicion.profundidad_neumatico_1) - MIN(medicion.profundidad_neumatico_1) +
+			 MAX(medicion.profundidad_neumatico_2) - MIN(medicion.profundidad_neumatico_2) +
+			 MAX(medicion.profundidad_neumatico_3) - MIN(medicion.profundidad_neumatico_3) +
+			 MAX(medicion.profundidad_neumatico_4) - MIN(medicion.profundidad_neumatico_4) 
+			 ) / 4
+		FROM AJO_DER.BI_FACT_medicion medicion
+		WHERE medicion.id_auto = @id_auto
+			AND medicion.nro_vuelta = @nro_vuelta
+			AND medicion.id_circuito = @id_circuito
+		GROUP BY medicion.id_auto,
+			medicion.nro_vuelta,
+			medicion.id_circuito
+	)
 END
 GO
 
@@ -416,30 +431,39 @@ FROM AJO_DER.incidente_auto
 GO
 
 
+
 -- Desgaste promedio de cada componente de cada auto por vuelta por circuito.
 CREATE FUNCTION AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito()
-RETURNS @Result TABLE (desgaste_promedio DECIMAL(18,10), componente NVARCHAR(255),id_auto int, auto_modelo NVARCHAR(255),nro_vuelta int, circuito_nombre NVARCHAR(255) )
+RETURNS @Result TABLE (desgaste_motor DECIMAL(18,6), desgaste_caja DECIMAL(18,3), desgaste_frenos DECIMAL(18,5), desgaste_neumaticos DECIMAL(18,6), auto_modelo NVARCHAR(255),nro_vuelta int, circuito_nombre NVARCHAR(255) )
 AS
 BEGIN
-	INSERT INTO @Result (desgaste_promedio,componente,id_auto,auto_modelo,nro_vuelta,circuito_nombre)
+	INSERT INTO @Result
 	SELECT
-		AVG(medicion.desgaste_caja_de_cambios) 'Desgaste Promedio',
-		(1) 'Componente', --(TODO)
+		MAX(medicion.potencia_motor) - MIN(medicion.potencia_motor)
+		'Desgaste Promedio de Motor',
+		MAX(medicion.desgaste_caja_de_cambios) - MIN(medicion.desgaste_caja_de_cambios)
+		'Desgaste Promedio de Caja de Cambios',
+		AJO_DER.BI_obtener_desgaste_promedio_frenos(
+			medicion.id_auto, 
+			medicion.nro_vuelta, 
+			medicion.id_circuito
+		) 'Desgaste Promedio de Frenos',
+		AJO_DER.BI_obtener_desgaste_promedio_neumaticos(
+			medicion.id_auto, 
+			medicion.nro_vuelta, 
+			medicion.id_circuito
+		) 'Desgaste Promedio de Neumaticos',
 		medicion.id_auto, 
-		auto.modelo 'Modelo del auto', 
 		medicion.nro_vuelta, 
-		circuito.nombre 'Circuito'
+		medicion.id_circuito
 	FROM AJO_DER.BI_FACT_medicion medicion
-		JOIN AJO_DER.BI_DIM_auto auto ON auto.id=medicion.id_auto
-		JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id=medicion.id_circuito
-	GROUP BY medicion.id_auto, medicion.nro_vuelta, medicion.id_circuito,auto.modelo,circuito.nombre
+		JOIN AJO_DER.BI_DIM_auto auto ON auto.id = medicion.id_auto
+		JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id = medicion.id_circuito
+	GROUP BY medicion.id_auto, medicion.nro_vuelta, medicion.id_circuito
+	ORDER BY medicion.id_circuito, medicion.nro_vuelta, medicion.id_auto
 RETURN
 END
 GO
-
-DROP TABLE #combustible_max_min
-GO
-
 
 -- Mejor tiempo de vuelta de cada escudería por circuito por año.
 -- El mejor tiempo está dado por el mínimo tiempo en que un auto logra realizar una vuelta de un circuito.
@@ -635,6 +659,7 @@ RETURN
 END
 GO
 
+SELECT * FROM AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito()
 SELECT * FROM AJO_DER.mejor_tiempo_de_vuelta_de_cada_escuderia()
 SELECT * FROM AJO_DER.circuitos_con_mayor_consumo_de_combustible_promedio()
 
