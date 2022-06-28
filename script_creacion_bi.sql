@@ -36,35 +36,35 @@ IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'BI_DIM_tiempo')
 	DROP TABLE AJO_DER.BI_DIM_tiempo
 GO
 
-
--- Eliminacion de funciones si existen
+-- Eliminacion de vistas si existen
 IF OBJECT_ID('AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito') IS NOT NULL
-	DROP FUNCTION AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito
+	DROP VIEW AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito
 
 IF OBJECT_ID('AJO_DER.BI_mejor_tiempo_de_vuelta_de_cada_escuderia') IS NOT NULL
-	DROP FUNCTION AJO_DER.BI_mejor_tiempo_de_vuelta_de_cada_escuderia
+	DROP VIEW AJO_DER.BI_mejor_tiempo_de_vuelta_de_cada_escuderia
 
 IF OBJECT_ID('AJO_DER.BI_circuitos_con_mayor_consumo_de_combustible_promedio') IS NOT NULL
-	DROP FUNCTION AJO_DER.BI_circuitos_con_mayor_consumo_de_combustible_promedio
+	DROP VIEW AJO_DER.BI_circuitos_con_mayor_consumo_de_combustible_promedio
 
 IF OBJECT_ID('AJO_DER.BI_maxima_velocidad_alcanzada_por_cada_auto') IS NOT NULL
-	DROP FUNCTION AJO_DER.BI_maxima_velocidad_alcanzada_por_cada_auto
+	DROP VIEW AJO_DER.BI_maxima_velocidad_alcanzada_por_cada_auto
 
 IF OBJECT_ID('AJO_DER.BI_tiempo_promedio_que_tardo_cada_escuderia') IS NOT NULL
-	DROP FUNCTION AJO_DER.BI_tiempo_promedio_que_tardo_cada_escuderia
+	DROP VIEW AJO_DER.BI_tiempo_promedio_que_tardo_cada_escuderia
 
 IF OBJECT_ID('AJO_DER.BI_cantidad_de_paradas_por_circuito') IS NOT NULL
-	DROP FUNCTION AJO_DER.BI_cantidad_de_paradas_por_circuito
+	DROP VIEW AJO_DER.BI_cantidad_de_paradas_por_circuito
 
 IF OBJECT_ID('AJO_DER.BI_circuitos_con_mayor_tiempo_en_paradas') IS NOT NULL
-	DROP FUNCTION AJO_DER.BI_circuitos_con_mayor_tiempo_en_paradas
+	DROP VIEW AJO_DER.BI_circuitos_con_mayor_tiempo_en_paradas
 
 IF OBJECT_ID('AJO_DER.BI_circuitos_mas_peligrosos_del_anio') IS NOT NULL
-	DROP FUNCTION AJO_DER.BI_circuitos_mas_peligrosos_del_anio
+	DROP VIEW AJO_DER.BI_circuitos_mas_peligrosos_del_anio
 
 IF OBJECT_ID('AJO_DER.BI_promedio_incidentes_escuderia_anio_tipo_de_sector') IS NOT NULL
-	DROP FUNCTION AJO_DER.BI_promedio_incidentes_escuderia_anio_tipo_de_sector
+	DROP VIEW AJO_DER.BI_promedio_incidentes_escuderia_anio_tipo_de_sector
 
+-- Eliminacion de funciones si existen
 IF OBJECT_ID('AJO_DER.BI_obtener_cuatrimestre') IS NOT NULL
 	DROP FUNCTION AJO_DER.BI_obtener_cuatrimestre
 
@@ -73,6 +73,12 @@ IF OBJECT_ID('AJO_DER.BI_obtener_desgaste_promedio_frenos') IS NOT NULL
 
 IF OBJECT_ID('AJO_DER.BI_obtener_desgaste_promedio_neumaticos') IS NOT NULL
 	DROP FUNCTION AJO_DER.BI_obtener_desgaste_promedio_neumaticos
+
+IF OBJECT_ID('AJO_DER.BI_obtener_tiempos_de_vuelta') IS NOT NULL
+	DROP FUNCTION AJO_DER.BI_obtener_tiempos_de_vuelta
+
+IF OBJECT_ID('AJO_DER.BI_obtener_Consumo_x_Auto') IS NOT NULL
+	DROP FUNCTION AJO_DER.BI_obtener_Consumo_x_Auto
 GO
 
 --Creacion de tablas
@@ -238,6 +244,54 @@ BEGIN
 			medicion.nro_vuelta,
 			medicion.id_circuito
 	)
+END
+GO
+
+CREATE FUNCTION AJO_DER.BI_obtener_tiempos_de_vuelta()
+RETURNS @Result TABLE (
+	tiempo_vuelta DECIMAL(18,10), 
+	nro_vuelta DECIMAL(18,0),
+	Escuderia NVARCHAR(255), 
+	Circuito NVARCHAR(255), 
+	Año NVARCHAR(255) 
+)
+AS
+BEGIN
+	INSERT INTO @Result
+	SELECT
+		MAX(medicion.tiempo_vuelta),
+		medicion.nro_vuelta,
+		escuderia.nombre,
+		circuito.nombre,
+		tiempo.anio
+	FROM AJO_DER.BI_FACT_medicion medicion
+		JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id = medicion.id_escuderia
+		JOIN AJO_DER.BI_DIM_circuito circuito on circuito.id = medicion.id_circuito
+		JOIN AJO_DER.BI_DIM_tiempo tiempo on tiempo.id = medicion.id_tiempo
+	GROUP BY medicion.nro_vuelta, escuderia.nombre, circuito.nombre, tiempo.anio
+	ORDER BY tiempo.anio, circuito.nombre, escuderia.nombre, medicion.nro_vuelta
+RETURN
+END
+GO
+
+CREATE FUNCTION AJO_DER.BI_obtener_Consumo_x_Auto()
+RETURNS @Result TABLE (
+	id_circuito INT, 
+	id_auto INT,
+	combustible_gastado_auto DECIMAL(18,2)
+)
+AS
+BEGIN
+	INSERT INTO @Result
+	SELECT
+		id_circuito,
+		id_auto,
+		MAX(cant_combustible) - MIN(cant_combustible)
+	FROM AJO_DER.BI_FACT_medicion medicion
+		JOIN AJO_DER.BI_DIM_circuito circuito ON medicion.id_circuito = circuito.id
+	GROUP BY id_circuito, id_auto
+	ORDER BY id_circuito
+RETURN
 END
 GO
 
@@ -433,11 +487,7 @@ GO
 
 
 -- Desgaste promedio de cada componente de cada auto por vuelta por circuito.
-CREATE FUNCTION AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito()
-RETURNS @Result TABLE (desgaste_motor DECIMAL(18,6), desgaste_caja DECIMAL(18,3), desgaste_frenos DECIMAL(18,5), desgaste_neumaticos DECIMAL(18,6), auto_modelo NVARCHAR(255),nro_vuelta int, circuito_nombre NVARCHAR(255) )
-AS
-BEGIN
-	INSERT INTO @Result
+CREATE VIEW AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito AS
 	SELECT
 		MAX(medicion.potencia_motor) - MIN(medicion.potencia_motor)
 		'Desgaste Promedio de Motor',
@@ -460,90 +510,34 @@ BEGIN
 		JOIN AJO_DER.BI_DIM_auto auto ON auto.id = medicion.id_auto
 		JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id = medicion.id_circuito
 	GROUP BY medicion.id_auto, medicion.nro_vuelta, medicion.id_circuito
-	ORDER BY medicion.id_circuito, medicion.nro_vuelta, medicion.id_auto
-RETURN
-END
+	--ORDER BY medicion.id_circuito, medicion.nro_vuelta, medicion.id_auto
 GO
 
 -- Mejor tiempo de vuelta de cada escudería por circuito por año.
 -- El mejor tiempo está dado por el mínimo tiempo en que un auto logra realizar una vuelta de un circuito.
-CREATE FUNCTION AJO_DER.BI_mejor_tiempo_de_vuelta_de_cada_escuderia()
-RETURNS @Result TABLE (
-	tiempo_vuelta DECIMAL(18,10),
-	escuderia_nombre NVARCHAR(255),
-	circuito_nombre NVARCHAR(255),
-	año NVARCHAR(255) 
-)
-AS
-BEGIN
-	DECLARE @tiempos_de_vuelta TABLE ( 
-		tiempo_vuelta DECIMAL(18,10), 
-		nro_vuelta DECIMAL(18,0),
-		Escuderia NVARCHAR(255), 
-		Circuito NVARCHAR(255), 
-		Año NVARCHAR(255) 
-	)
-	INSERT INTO @tiempos_de_vuelta
-	SELECT
-		MAX(medicion.tiempo_vuelta),
-		medicion.nro_vuelta,
-		escuderia.nombre,
-		circuito.nombre,
-		tiempo.anio
-	FROM AJO_DER.BI_FACT_medicion medicion
-		JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id = medicion.id_escuderia
-		JOIN AJO_DER.BI_DIM_circuito circuito on circuito.id = medicion.id_circuito
-		JOIN AJO_DER.BI_DIM_tiempo tiempo on tiempo.id = medicion.id_tiempo
-	GROUP BY medicion.nro_vuelta, escuderia.nombre, circuito.nombre, tiempo.anio
-	ORDER BY tiempo.anio, circuito.nombre, escuderia.nombre, medicion.nro_vuelta
-
-	INSERT INTO @Result
+CREATE VIEW AJO_DER.BI_mejor_tiempo_de_vuelta_de_cada_escuderia AS
 	SELECT
 		MIN(tiempo_vuelta) mejor_tiempo_vuelta,
 		Escuderia,
 		Circuito,
 		Año
-	FROM @tiempos_de_vuelta
+	FROM AJO_DER.BI_obtener_tiempos_de_vuelta()
 	GROUP BY Escuderia, Circuito, Año
-	ORDER BY Año, Circuito, Escuderia
-RETURN 
-END
+	--ORDER BY Año, Circuito, Escuderia
 GO
 
 -- Los 3 de circuitos con mayor consumo de combustible promedio
-CREATE FUNCTION AJO_DER.BI_circuitos_con_mayor_consumo_de_combustible_promedio()
-RETURNS @Result TABLE (id_circuito INT, combustible_gastado_promedio DECIMAL(18,2))
-AS
-BEGIN
-	DECLARE @ConsumoPorAuto TABLE (id_circuito INT,  id_auto INT, combustible_gastado_auto DECIMAL(18,2))
-
-	INSERT INTO @ConsumoPorAuto (id_circuito,  id_auto, combustible_gastado_auto)
-	SELECT
-		id_circuito,
-		id_auto,
-		MAX(cant_combustible) - MIN(cant_combustible)
-	FROM AJO_DER.BI_FACT_medicion medicion
-		JOIN AJO_DER.BI_DIM_circuito circuito ON medicion.id_circuito = circuito.id
-	GROUP BY id_circuito, id_auto
-	ORDER BY id_circuito
-
-	INSERT INTO @Result (id_circuito, combustible_gastado_promedio)
+CREATE VIEW AJO_DER.BI_circuitos_con_mayor_consumo_de_combustible_promedio AS
 	SELECT TOP 3
 		id_circuito,
 		AVG(combustible_gastado_auto) AS 'Combustible gastado promedio'
-	FROM @ConsumoPorAuto
+	FROM AJO_DER.BI_obtener_Consumo_x_Auto()
 	GROUP BY id_circuito
-	ORDER BY 'Combustible gastado promedio' DESC
-RETURN 
-END
+	--ORDER BY 'Combustible gastado promedio' DESC
 GO
 
 -- Máxima velocidad alcanzada por cada auto en cada tipo de sector de cada circuito.
-CREATE FUNCTION AJO_DER.BI_maxima_velocidad_alcanzada_por_cada_auto()
-RETURNS @Result TABLE ( velocidad_maxima DECIMAL(18,2), id_auto INT, tipo_sector NVARCHAR(255), circuito NVARCHAR(255))
-AS
-BEGIN
-	INSERT INTO @Result
+CREATE VIEW AJO_DER.BI_maxima_velocidad_alcanzada_por_cada_auto AS
 	SELECT
 		MAX(medicion.velocidad) velocidad_maxima,
 		id_auto,	
@@ -553,17 +547,11 @@ BEGIN
 		JOIN AJO_DER.BI_DIM_tipo_sector tipo_sector ON tipo_sector.id = medicion.id_tipo_sector
 		JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id = medicion.id_circuito
 	GROUP BY id_auto, tipo_sector.tipo, circuito.nombre
-	ORDER BY circuito.nombre, tipo_sector.tipo, id_auto
-RETURN 
-END
+	--ORDER BY circuito.nombre, tipo_sector.tipo, id_auto
 GO
 
 -- Tiempo promedio que tardó cada escudería en las paradas por cuatrimestre
-CREATE FUNCTION AJO_DER.BI_tiempo_promedio_que_tardo_cada_escuderia()
-RETURNS @Result TABLE (promedio_tiempo_parada DECIMAL(18,10), escuderia_nombre NVARCHAR(255), cuatrimestre INT )
-AS
-BEGIN
-	INSERT INTO @Result
+CREATE VIEW AJO_DER.BI_tiempo_promedio_que_tardo_cada_escuderia AS
 	SELECT
 		AVG(parada_box.tiempo_parada) promedio_tiempo_parada,
 		escuderia.nombre escuderia_nombre,
@@ -572,16 +560,10 @@ BEGIN
 		JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id = parada_box.id_escuderia
 		JOIN AJO_DER.BI_DIM_tiempo tiempo ON tiempo.id = parada_box.id_tiempo
 	GROUP BY escuderia.nombre, tiempo.cuatrimestre
-RETURN 
-END
 GO
 
 -- Cantidad de paradas por circuito por escudería por año.
-CREATE FUNCTION AJO_DER.BI_cantidad_de_paradas_por_circuito()
-RETURNS @Result TABLE ( paradas INT, circuito_nombre NVARCHAR(255), escuderia_nombre NVARCHAR(255), año NVARCHAR(255))
-AS
-BEGIN
-	INSERT INTO @Result (paradas,circuito_nombre,escuderia_nombre,año)
+CREATE VIEW AJO_DER.BI_cantidad_de_paradas_por_circuito AS
 	SELECT
 		count(*) AS 'cantidad_de_paradas',
 		circuito.nombre AS 'circuito',
@@ -592,33 +574,21 @@ BEGIN
 		JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id = parada_box.id_escuderia
 		JOIN AJO_DER.BI_DIM_tiempo tiempo ON tiempo.id = parada_box.id_tiempo
 	GROUP BY circuito.nombre, escuderia.nombre, tiempo.anio
-RETURN
-END
 GO
 
 -- Los 3 circuitos donde se consume mayor cantidad en tiempo de paradas en boxes
-CREATE FUNCTION AJO_DER.BI_circuitos_con_mayor_tiempo_en_paradas()
-RETURNS @Result TABLE (circuito NVARCHAR(255), tiempo_total_paradas DECIMAL(18,2))
-AS
-BEGIN
-	INSERT INTO @Result
+CREATE VIEW AJO_DER.BI_circuitos_con_mayor_tiempo_en_paradas AS
 	SELECT TOP 3
 		circuito.nombre AS 'circuito',
 		SUM(parada_box.tiempo_parada) AS 'Tiempo total en paradas'
 	FROM AJO_DER.BI_FACT_parada_box parada_box
 		JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id = parada_box.id_circuito
 	GROUP BY circuito.nombre
-	ORDER BY SUM(parada_box.tiempo_parada) DESC
-RETURN 
-END
+	--ORDER BY SUM(parada_box.tiempo_parada) DESC
 GO
 
 -- Los 3 circuitos más peligrosos del año, en función mayor cantidad de incidentes
-CREATE FUNCTION AJO_DER.BI_circuitos_mas_peligrosos_del_anio()
-RETURNS @Result TABLE (circuito NVARCHAR(255), anio INT, cant_incidentes INT)
-AS
-BEGIN
-	INSERT INTO @Result
+CREATE VIEW AJO_DER.BI_circuitos_mas_peligrosos_del_anio AS
 	SELECT
 		circuito,
 		anio,
@@ -635,38 +605,30 @@ BEGIN
 		GROUP BY circuito.nombre, fecha.anio
 	) AS ranking_incidentes_x_Circuito_x_anio
 	WHERE ranking_incidentes_x_Circuito_x_anio.ranking <= 3
-	ORDER BY cantidad_incidentes DESC
-RETURN 
-END
+	--ORDER BY cantidad_incidentes DESC
 GO
 
 -- Promedio de incidentes que presenta cada escudería por año en los distintos tipo de sectores
-CREATE FUNCTION AJO_DER.BI_promedio_incidentes_escuderia_anio_tipo_de_sector()
-RETURNS @Result TABLE (promedio_incidentes DECIMAL(18,5), escuderia NVARCHAR(255), anio INT )
-AS
-BEGIN
-	INSERT INTO @Result
+CREATE VIEW AJO_DER.BI_promedio_incidentes_escuderia_anio_tipo_de_sector AS
 	SELECT
-		COUNT(*) * 1.0 / (SELECT COUNT(*) FROM AJO_DER.BI_DIM_tipo_sector),
+		COUNT(*) * 1.0 / (SELECT COUNT(*) FROM AJO_DER.BI_DIM_tipo_sector) AS 'promedio_incidentes',
 		escuderia.nombre,
 		fecha.anio
 	FROM AJO_DER.BI_FACT_incidente_auto incidente_auto
 		JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id = incidente_auto.id_escuderia
 		JOIN AJO_DER.BI_DIM_tiempo fecha ON fecha.id = incidente_auto.id_tiempo
 	GROUP BY escuderia.nombre, fecha.anio
-	ORDER BY fecha.anio, escuderia.nombre
-RETURN 
-END
+	--ORDER BY fecha.anio, escuderia.nombre
 GO
 
-SELECT * FROM AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito()
-SELECT * FROM AJO_DER.BI_mejor_tiempo_de_vuelta_de_cada_escuderia()
-SELECT * FROM AJO_DER.BI_circuitos_con_mayor_consumo_de_combustible_promedio()
+SELECT * FROM AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito
+SELECT * FROM AJO_DER.BI_mejor_tiempo_de_vuelta_de_cada_escuderia
+SELECT * FROM AJO_DER.BI_circuitos_con_mayor_consumo_de_combustible_promedio
 
-SELECT * FROM AJO_DER.BI_maxima_velocidad_alcanzada_por_cada_auto()
-SELECT * FROM AJO_DER.BI_tiempo_promedio_que_tardo_cada_escuderia()
-SELECT * FROM AJO_DER.BI_cantidad_de_paradas_por_circuito()
+SELECT * FROM AJO_DER.BI_maxima_velocidad_alcanzada_por_cada_auto
+SELECT * FROM AJO_DER.BI_tiempo_promedio_que_tardo_cada_escuderia
+SELECT * FROM AJO_DER.BI_cantidad_de_paradas_por_circuito
 
-SELECT * FROM AJO_DER.BI_circuitos_con_mayor_tiempo_en_paradas()
-SELECT * FROM AJO_DER.BI_circuitos_mas_peligrosos_del_anio()
-SELECT * FROM AJO_DER.BI_promedio_incidentes_escuderia_anio_tipo_de_sector()
+SELECT * FROM AJO_DER.BI_circuitos_con_mayor_tiempo_en_paradas
+SELECT * FROM AJO_DER.BI_circuitos_mas_peligrosos_del_anio
+SELECT * FROM AJO_DER.BI_promedio_incidentes_escuderia_anio_tipo_de_sector
