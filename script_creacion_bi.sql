@@ -180,119 +180,119 @@ GO
 --Funciones
 
 CREATE FUNCTION AJO_DER.BI_obtener_cuatrimestre(@fecha DATE)
-RETURNS INT
-AS
-BEGIN
-	IF(MONTH(@fecha) BETWEEN 1 AND 4)
+	RETURNS INT
+	AS
 	BEGIN
-		RETURN 1
+		IF(MONTH(@fecha) BETWEEN 1 AND 4)
+		BEGIN
+			RETURN 1
+		END
+		IF(MONTH(@fecha) BETWEEN 5 AND 8)
+		BEGIN
+			RETURN 2
+		END
+		IF(MONTH(@fecha) BETWEEN 9 AND 12)
+		BEGIN
+			RETURN 3
+		END
+			RETURN NULL
 	END
-	IF(MONTH(@fecha) BETWEEN 5 AND 8)
-	BEGIN
-		RETURN 2
-	END
-	IF(MONTH(@fecha) BETWEEN 9 AND 12)
-	BEGIN
-		RETURN 3
-	END
-	    RETURN NULL
-END
 GO
 
 CREATE FUNCTION AJO_DER.BI_obtener_desgaste_promedio_frenos(
-	@id_auto INT, @nro_vuelta INT, @id_circuito INT
-)
-RETURNS DECIMAL(18,6)
-AS
-BEGIN
-	RETURN (
-		SELECT
-			(MAX(medicion.grosor_pastilla_freno_1) - MIN(medicion.grosor_pastilla_freno_1) +
-			 MAX(medicion.grosor_pastilla_freno_2) - MIN(medicion.grosor_pastilla_freno_2) +
-			 MAX(medicion.grosor_pastilla_freno_3) - MIN(medicion.grosor_pastilla_freno_3) +
-			 MAX(medicion.grosor_pastilla_freno_4) - MIN(medicion.grosor_pastilla_freno_4)
-			 ) / 4
-		FROM AJO_DER.BI_FACT_medicion medicion
-		WHERE medicion.id_auto = @id_auto
-			AND medicion.nro_vuelta = @nro_vuelta
-			AND medicion.id_circuito = @id_circuito
-		GROUP BY medicion.id_auto,
-			medicion.nro_vuelta,
-			medicion.id_circuito
+		@id_auto INT, @nro_vuelta INT, @id_circuito INT
 	)
-END
+	RETURNS DECIMAL(18,6)
+	AS
+	BEGIN
+		RETURN (
+			SELECT
+				(MAX(medicion.grosor_pastilla_freno_1) - MIN(medicion.grosor_pastilla_freno_1) +
+				 MAX(medicion.grosor_pastilla_freno_2) - MIN(medicion.grosor_pastilla_freno_2) +
+				 MAX(medicion.grosor_pastilla_freno_3) - MIN(medicion.grosor_pastilla_freno_3) +
+				 MAX(medicion.grosor_pastilla_freno_4) - MIN(medicion.grosor_pastilla_freno_4)
+				 ) / 4
+			FROM AJO_DER.BI_FACT_medicion medicion
+			WHERE medicion.id_auto = @id_auto
+				AND medicion.nro_vuelta = @nro_vuelta
+				AND medicion.id_circuito = @id_circuito
+			GROUP BY medicion.id_auto,
+				medicion.nro_vuelta,
+				medicion.id_circuito
+		)
+	END
 GO
 
 CREATE FUNCTION AJO_DER.BI_obtener_desgaste_promedio_neumaticos(
-	@id_auto INT, @nro_vuelta INT, @id_circuito INT
-)
-RETURNS DECIMAL(18,6)
-AS
-BEGIN
-	RETURN (
-		SELECT
-			(MAX(medicion.profundidad_neumatico_1) - MIN(medicion.profundidad_neumatico_1) +
-			 MAX(medicion.profundidad_neumatico_2) - MIN(medicion.profundidad_neumatico_2) +
-			 MAX(medicion.profundidad_neumatico_3) - MIN(medicion.profundidad_neumatico_3) +
-			 MAX(medicion.profundidad_neumatico_4) - MIN(medicion.profundidad_neumatico_4) 
-			 ) / 4
-		FROM AJO_DER.BI_FACT_medicion medicion
-		WHERE medicion.id_auto = @id_auto
-			AND medicion.nro_vuelta = @nro_vuelta
-			AND medicion.id_circuito = @id_circuito
-		GROUP BY medicion.id_auto,
-			medicion.nro_vuelta,
-			medicion.id_circuito
+		@id_auto INT, @nro_vuelta INT, @id_circuito INT
 	)
-END
+	RETURNS DECIMAL(18,6)
+	AS
+	BEGIN
+		RETURN (
+			SELECT
+				(MAX(medicion.profundidad_neumatico_1) - MIN(medicion.profundidad_neumatico_1) +
+				 MAX(medicion.profundidad_neumatico_2) - MIN(medicion.profundidad_neumatico_2) +
+				 MAX(medicion.profundidad_neumatico_3) - MIN(medicion.profundidad_neumatico_3) +
+				 MAX(medicion.profundidad_neumatico_4) - MIN(medicion.profundidad_neumatico_4) 
+				 ) / 4
+			FROM AJO_DER.BI_FACT_medicion medicion
+			WHERE medicion.id_auto = @id_auto
+				AND medicion.nro_vuelta = @nro_vuelta
+				AND medicion.id_circuito = @id_circuito
+			GROUP BY medicion.id_auto,
+				medicion.nro_vuelta,
+				medicion.id_circuito
+		)
+	END
 GO
 
 CREATE FUNCTION AJO_DER.BI_obtener_tiempos_de_vuelta()
-RETURNS @Result TABLE (
-	tiempo_vuelta DECIMAL(18,10), 
-	nro_vuelta DECIMAL(18,0),
-	Escuderia NVARCHAR(255), 
-	Circuito NVARCHAR(255), 
-	Año NVARCHAR(255) 
-)
-AS
-BEGIN
-	INSERT INTO @Result
-	SELECT
-		MAX(medicion.tiempo_vuelta),
-		medicion.nro_vuelta,
-		escuderia.nombre,
-		circuito.nombre,
-		tiempo.anio
-	FROM AJO_DER.BI_FACT_medicion medicion
-		JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id = medicion.id_escuderia
-		JOIN AJO_DER.BI_DIM_circuito circuito on circuito.id = medicion.id_circuito
-		JOIN AJO_DER.BI_DIM_tiempo tiempo on tiempo.id = medicion.id_tiempo
-	GROUP BY medicion.nro_vuelta, escuderia.nombre, circuito.nombre, tiempo.anio
-	ORDER BY tiempo.anio, circuito.nombre, escuderia.nombre, medicion.nro_vuelta
-RETURN
-END
+	RETURNS @Result TABLE (
+		tiempo_vuelta DECIMAL(18,10), 
+		nro_vuelta DECIMAL(18,0),
+		Escuderia NVARCHAR(255), 
+		Circuito NVARCHAR(255), 
+		Año NVARCHAR(255) 
+	)
+	AS
+	BEGIN
+		INSERT INTO @Result
+		SELECT
+			MAX(medicion.tiempo_vuelta),
+			medicion.nro_vuelta,
+			escuderia.nombre,
+			circuito.nombre,
+			tiempo.anio
+		FROM AJO_DER.BI_FACT_medicion medicion
+			JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id = medicion.id_escuderia
+			JOIN AJO_DER.BI_DIM_circuito circuito on circuito.id = medicion.id_circuito
+			JOIN AJO_DER.BI_DIM_tiempo tiempo on tiempo.id = medicion.id_tiempo
+		GROUP BY medicion.nro_vuelta, escuderia.nombre, circuito.nombre, tiempo.anio
+		ORDER BY tiempo.anio, circuito.nombre, escuderia.nombre, medicion.nro_vuelta
+	RETURN
+	END
 GO
 
 CREATE FUNCTION AJO_DER.BI_obtener_Consumo_x_Auto()
-RETURNS @Result TABLE (
-	id_circuito INT, 
-	id_auto INT,
-	combustible_gastado_auto DECIMAL(18,2)
-)
-AS
-BEGIN
-	INSERT INTO @Result
-	SELECT
-		id_circuito,
-		id_auto,
-		MAX(cant_combustible) - MIN(cant_combustible)
-	FROM AJO_DER.BI_FACT_medicion medicion
-		JOIN AJO_DER.BI_DIM_circuito circuito ON medicion.id_circuito = circuito.id
-	GROUP BY id_circuito, id_auto
-	ORDER BY id_circuito
-RETURN
-END
+	RETURNS @Result TABLE (
+		id_circuito INT, 
+		id_auto INT,
+		combustible_gastado_auto DECIMAL(18,2)
+	)
+	AS
+	BEGIN
+		INSERT INTO @Result
+		SELECT
+			id_circuito,
+			id_auto,
+			MAX(cant_combustible) - MIN(cant_combustible)
+		FROM AJO_DER.BI_FACT_medicion medicion
+			JOIN AJO_DER.BI_DIM_circuito circuito ON medicion.id_circuito = circuito.id
+		GROUP BY id_circuito, id_auto
+		ORDER BY id_circuito
+	RETURN
+	END
 GO
 
 -- Carga de datos de auto
