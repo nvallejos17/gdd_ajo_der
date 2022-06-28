@@ -101,7 +101,6 @@ CREATE TABLE AJO_DER.BI_DIM_escuderia(
 
 CREATE TABLE AJO_DER.BI_DIM_circuito(
 	id INT NOT NULL IDENTITY PRIMARY KEY,
-	codigo INT,
 	nombre NVARCHAR(255),
 );
 
@@ -199,54 +198,6 @@ CREATE FUNCTION AJO_DER.BI_obtener_cuatrimestre(@fecha DATE)
 	END
 GO
 
-CREATE FUNCTION AJO_DER.BI_obtener_desgaste_promedio_frenos(
-		@id_auto INT, @nro_vuelta DECIMAL(18,0), @id_circuito INT
-	)
-	RETURNS DECIMAL(18,6)
-	AS
-	BEGIN
-		RETURN (
-			SELECT
-				(MAX(medicion.grosor_pastilla_freno_1) - MIN(medicion.grosor_pastilla_freno_1) +
-				 MAX(medicion.grosor_pastilla_freno_2) - MIN(medicion.grosor_pastilla_freno_2) +
-				 MAX(medicion.grosor_pastilla_freno_3) - MIN(medicion.grosor_pastilla_freno_3) +
-				 MAX(medicion.grosor_pastilla_freno_4) - MIN(medicion.grosor_pastilla_freno_4)
-				 ) / 4
-			FROM AJO_DER.BI_FACT_medicion medicion
-			WHERE medicion.id_auto = @id_auto
-				AND medicion.nro_vuelta = @nro_vuelta
-				AND medicion.id_circuito = @id_circuito
-			GROUP BY medicion.id_auto,
-				medicion.nro_vuelta,
-				medicion.id_circuito
-		)
-	END
-GO
-
-CREATE FUNCTION AJO_DER.BI_obtener_desgaste_promedio_neumaticos(
-		@id_auto INT, @nro_vuelta DECIMAL(18,0), @id_circuito INT
-	)
-	RETURNS DECIMAL(18,6)
-	AS
-	BEGIN
-		RETURN (
-			SELECT
-				(MAX(medicion.profundidad_neumatico_1) - MIN(medicion.profundidad_neumatico_1) +
-				 MAX(medicion.profundidad_neumatico_2) - MIN(medicion.profundidad_neumatico_2) +
-				 MAX(medicion.profundidad_neumatico_3) - MIN(medicion.profundidad_neumatico_3) +
-				 MAX(medicion.profundidad_neumatico_4) - MIN(medicion.profundidad_neumatico_4) 
-				 ) / 4
-			FROM AJO_DER.BI_FACT_medicion medicion
-			WHERE medicion.id_auto = @id_auto
-				AND medicion.nro_vuelta = @nro_vuelta
-				AND medicion.id_circuito = @id_circuito
-			GROUP BY medicion.id_auto,
-				medicion.nro_vuelta,
-				medicion.id_circuito
-		)
-	END
-GO
-
 CREATE FUNCTION AJO_DER.BI_obtener_tiempos_de_vuelta()
 	RETURNS @Result TABLE (
 		tiempo_vuelta DECIMAL(18,10), 
@@ -315,7 +266,7 @@ FROM AJO_DER.escuderia
 -- Carga de datos de circuito
 
 INSERT INTO AJO_DER.BI_DIM_circuito
-SELECT codigo, nombre
+SELECT nombre
 FROM AJO_DER.circuito
 
 -- Carga de datos de tipo_neumatico
@@ -493,16 +444,16 @@ CREATE VIEW AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circui
 		'Desgaste Promedio de Motor',
 		MAX(medicion.desgaste_caja_de_cambios) - MIN(medicion.desgaste_caja_de_cambios)
 		'Desgaste Promedio de Caja de Cambios',
-		AJO_DER.BI_obtener_desgaste_promedio_frenos(
-			medicion.id_auto, 
-			medicion.nro_vuelta, 
-			medicion.id_circuito
-		) 'Desgaste Promedio de Frenos',
-		AJO_DER.BI_obtener_desgaste_promedio_neumaticos(
-			medicion.id_auto, 
-			medicion.nro_vuelta, 
-			medicion.id_circuito
-		) 'Desgaste Promedio de Neumaticos',
+		(MAX(medicion.grosor_pastilla_freno_1) - MIN(medicion.grosor_pastilla_freno_1) +
+		 MAX(medicion.grosor_pastilla_freno_2) - MIN(medicion.grosor_pastilla_freno_2) +
+		 MAX(medicion.grosor_pastilla_freno_3) - MIN(medicion.grosor_pastilla_freno_3) +
+		 MAX(medicion.grosor_pastilla_freno_4) - MIN(medicion.grosor_pastilla_freno_4)
+		 ) / 4 'Desgaste Promedio de Frenos',
+		(MAX(medicion.profundidad_neumatico_1) - MIN(medicion.profundidad_neumatico_1) +
+		 MAX(medicion.profundidad_neumatico_2) - MIN(medicion.profundidad_neumatico_2) +
+		 MAX(medicion.profundidad_neumatico_3) - MIN(medicion.profundidad_neumatico_3) +
+		 MAX(medicion.profundidad_neumatico_4) - MIN(medicion.profundidad_neumatico_4) 
+		 ) / 4 'Desgaste Promedio de Neumaticos',
 		auto.modelo AS 'Modelo del Auto', 
 		auto.numero_auto AS 'Numero del Auto de su Escuderia',
 		medicion.nro_vuelta AS 'Numero de Vuelta', 
