@@ -482,7 +482,6 @@ CREATE VIEW AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circui
 		JOIN AJO_DER.BI_DIM_auto auto ON auto.id = medicion.id_auto
 		JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id = medicion.id_circuito
 	GROUP BY medicion.id_auto, auto.modelo, auto.numero_auto, medicion.nro_vuelta, circuito.nombre, medicion.id_circuito
-	--ORDER BY medicion.id_circuito, medicion.nro_vuelta, medicion.id_auto
 GO
 
 -- Mejor tiempo de vuelta de cada escudería por circuito por año.
@@ -495,7 +494,6 @@ CREATE VIEW AJO_DER.BI_mejor_tiempo_de_vuelta_de_cada_escuderia AS
 		anio AS 'Año'
 	FROM AJO_DER.BI_obtener_tiempos_de_vuelta()
 	GROUP BY escuderia, circuito, anio
-	--ORDER BY Año, Circuito, Escuderia
 GO
 
 -- Los 3 de circuitos con mayor consumo de combustible promedio
@@ -521,7 +519,6 @@ CREATE VIEW AJO_DER.BI_maxima_velocidad_alcanzada_por_cada_auto AS
 		JOIN AJO_DER.BI_DIM_tipo_sector tipo_sector ON tipo_sector.id = medicion.id_tipo_sector
 		JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id = medicion.id_circuito
 	GROUP BY auto.modelo, auto.numero_auto, tipo_sector.tipo, circuito.nombre
-	--ORDER BY circuito.nombre, tipo_sector.tipo, id_auto
 GO
 
 -- Tiempo promedio que tardó cada escudería en las paradas por cuatrimestre
@@ -581,17 +578,22 @@ CREATE VIEW AJO_DER.BI_promedio_incidentes_escuderia_anio_tipo_de_sector AS
 		JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id = incidente_auto.id_escuderia
 		JOIN AJO_DER.BI_DIM_tiempo fecha ON fecha.id = incidente_auto.id_tiempo
 	GROUP BY escuderia.nombre, fecha.anio
-	--ORDER BY fecha.anio, escuderia.nombre
 GO
 
 SELECT * FROM AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito
+ORDER BY Circuito, [Numero de Vuelta], [Modelo del Auto], [Numero del Auto de su Escuderia]
 SELECT * FROM AJO_DER.BI_mejor_tiempo_de_vuelta_de_cada_escuderia
+ORDER BY Año, Circuito, Escuderia
 SELECT * FROM AJO_DER.BI_circuitos_con_mayor_consumo_de_combustible_promedio
 
 SELECT * FROM AJO_DER.BI_maxima_velocidad_alcanzada_por_cada_auto
+ORDER BY Circuito, [Tipo Sector], [Modelo del Auto], [Numero del Auto de su Escuderia]
 SELECT * FROM AJO_DER.BI_tiempo_promedio_que_tardo_cada_escuderia
+ORDER BY Cuatrimestre, Escuderia
 SELECT * FROM AJO_DER.BI_cantidad_de_paradas_por_circuito
+ORDER BY Año, Circuito, Escuderia
 
 SELECT * FROM AJO_DER.BI_circuitos_con_mayor_tiempo_en_paradas
 SELECT * FROM AJO_DER.BI_circuitos_mas_peligrosos_del_anio
 SELECT * FROM AJO_DER.BI_promedio_incidentes_escuderia_anio_tipo_de_sector
+ORDER BY Año, Escuderia
