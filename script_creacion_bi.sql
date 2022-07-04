@@ -81,6 +81,10 @@ IF OBJECT_ID('AJO_DER.BI_obtener_Consumo_x_Auto') IS NOT NULL
 	DROP FUNCTION AJO_DER.BI_obtener_Consumo_x_Auto
 GO
 
+IF OBJECT_ID('AJO_DER.BI_ranking_incidentes_x_Circuito_x_anio') IS NOT NULL
+	DROP FUNCTION AJO_DER.BI_ranking_incidentes_x_Circuito_x_anio
+GO
+
 --Creacion de tablas
 CREATE TABLE AJO_DER.BI_DIM_auto (
 	id INT NOT NULL IDENTITY PRIMARY KEY,
@@ -235,6 +239,29 @@ CREATE FUNCTION AJO_DER.BI_obtener_Consumo_x_Auto()
 			JOIN AJO_DER.BI_DIM_circuito circuito ON medicion.id_circuito = circuito.id
 		GROUP BY id_circuito, id_auto
 		ORDER BY id_circuito
+	RETURN
+	END
+GO
+
+CREATE FUNCTION AJO_DER.BI_ranking_incidentes_x_Circuito_x_anio()
+	RETURNS @Result TABLE (
+		circuito NVARCHAR(255), 
+		anio INT,
+		cantidad_incidentes INT,
+		ranking INT
+	)
+	AS
+	BEGIN
+		INSERT INTO @Result
+		SELECT
+			circuito.nombre,
+			fecha.anio,
+			COUNT(*),
+			ROW_NUMBER() OVER (PARTITION BY fecha.anio ORDER BY COUNT(*) DESC)
+		FROM AJO_DER.BI_FACT_incidente_auto incidente_auto
+			JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id = incidente_auto.id_circuito
+			JOIN AJO_DER.BI_DIM_tiempo fecha ON fecha.id = incidente_auto.id_tiempo
+		GROUP BY circuito.nombre, fecha.anio
 	RETURN
 	END
 GO
@@ -478,7 +505,7 @@ CREATE VIEW AJO_DER.BI_circuitos_con_mayor_consumo_de_combustible_promedio AS
 		AVG(consumo_combustible) AS 'Consumo de Combustible Promedio'
 	FROM AJO_DER.BI_obtener_Consumo_x_Auto()
 	GROUP BY id_circuito
-	--ORDER BY 'Combustible gastado promedio' DESC
+	ORDER BY 2 DESC
 GO
 
 -- Máxima velocidad alcanzada por cada auto en cada tipo de sector de cada circuito.
@@ -531,7 +558,7 @@ CREATE VIEW AJO_DER.BI_circuitos_con_mayor_tiempo_en_paradas AS
 	FROM AJO_DER.BI_FACT_parada_box parada_box
 		JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id = parada_box.id_circuito
 	GROUP BY circuito.nombre
-	--ORDER BY SUM(parada_box.tiempo_parada) DESC
+	ORDER BY 2 DESC
 GO
 
 -- Los 3 circuitos más peligrosos del año, en función mayor cantidad de incidentes
@@ -540,19 +567,8 @@ CREATE VIEW AJO_DER.BI_circuitos_mas_peligrosos_del_anio AS
 		circuito AS 'Circuito',
 		anio AS 'Año',
 		cantidad_incidentes AS 'Cantidad de Incidentes'
-	FROM (
-		SELECT
-			circuito.nombre AS circuito,
-			fecha.anio,
-			COUNT(*) AS cantidad_incidentes,
-			ROW_NUMBER() OVER (PARTITION BY fecha.anio ORDER BY COUNT(*) DESC) AS ranking
-		FROM AJO_DER.BI_FACT_incidente_auto incidente_auto
-			JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id = incidente_auto.id_circuito
-			JOIN AJO_DER.BI_DIM_tiempo fecha ON fecha.id = incidente_auto.id_tiempo
-		GROUP BY circuito.nombre, fecha.anio
-	) AS ranking_incidentes_x_Circuito_x_anio
-	WHERE ranking_incidentes_x_Circuito_x_anio.ranking <= 3
-	--ORDER BY cantidad_incidentes DESC
+	FROM AJO_DER.BI_ranking_incidentes_x_Circuito_x_anio()
+	WHERE ranking <= 3
 GO
 
 -- Promedio de incidentes que presenta cada escudería por año en los distintos tipo de sectores
