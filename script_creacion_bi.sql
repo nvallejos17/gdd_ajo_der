@@ -140,14 +140,14 @@ CREATE TABLE AJO_DER.BI_FACT_medicion (
 
 	nro_vuelta DECIMAL(18,0),
 
-	tiempo_vuelta_total DECIMAL(18,10),
-	velocidad_maxima_sector DECIMAL(18,2),
-	consumo_combustible_circuito DECIMAL(18,2),
+	tiempo_vuelta_sector DECIMAL(18,10),
+	velocidad_maxima_sector DECIMAL(18,4),
+	consumo_combustible_sector DECIMAL(18,4),
 
-	desgaste_promedio_motor_vuelta DECIMAL(18,6),
-	desgaste_promedio_caja_vuelta DECIMAL(18,4),
-	desgaste_promedio_frenos_vuelta DECIMAL(18,4),
-	desgaste_promedio_neumaticos_vuelta DECIMAL(18,6)
+	desgaste_promedio_motor_sector DECIMAL(18,6),
+	desgaste_promedio_caja_sector DECIMAL(18,4),
+	desgaste_promedio_frenos_sector DECIMAL(18,4),
+	desgaste_promedio_neumaticos_sector DECIMAL(18,6)
 
 	--id_tipo_neumatico_1 INT REFERENCES AJO_DER.BI_DIM_tipo_neumatico, -- FK
 	--id_tipo_neumatico_2 INT REFERENCES AJO_DER.BI_DIM_tipo_neumatico, -- FK
@@ -188,7 +188,6 @@ CREATE FUNCTION AJO_DER.BI_obtener_cuatrimestre(@fecha DATE)
 	END
 GO
 
-/*
 CREATE FUNCTION AJO_DER.BI_obtener_tiempos_de_vuelta()
 	RETURNS @Result TABLE (
 		tiempo_vuelta DECIMAL(18,10), 
@@ -202,7 +201,7 @@ CREATE FUNCTION AJO_DER.BI_obtener_tiempos_de_vuelta()
 	BEGIN
 		INSERT INTO @Result
 		SELECT
-			MAX(medicion.tiempo_vuelta),
+			MAX(medicion.tiempo_vuelta_sector),
 			medicion.nro_vuelta,
 			medicion.id_auto,
 			escuderia.nombre,
@@ -213,8 +212,7 @@ CREATE FUNCTION AJO_DER.BI_obtener_tiempos_de_vuelta()
 			JOIN AJO_DER.BI_DIM_circuito circuito on circuito.id = medicion.id_circuito
 			JOIN AJO_DER.BI_DIM_tiempo tiempo on tiempo.id = medicion.id_tiempo
 		GROUP BY medicion.nro_vuelta, medicion.id_auto, escuderia.nombre, circuito.nombre, tiempo.anio
-		HAVING MAX(medicion.tiempo_vuelta) != 0
-		ORDER BY tiempo.anio, circuito.nombre, escuderia.nombre, medicion.id_auto, medicion.nro_vuelta
+		ORDER BY medicion.id_auto, escuderia.nombre, circuito.nombre, tiempo.anio, medicion.nro_vuelta
 	RETURN
 	END
 GO
@@ -222,6 +220,7 @@ GO
 CREATE FUNCTION AJO_DER.BI_obtener_Consumo_x_Auto()
 	RETURNS @Result TABLE (
 		id_circuito INT, 
+		id_tiempo INT,
 		id_auto INT,
 		consumo_combustible DECIMAL(18,3)
 	)
@@ -230,16 +229,16 @@ CREATE FUNCTION AJO_DER.BI_obtener_Consumo_x_Auto()
 		INSERT INTO @Result
 		SELECT
 			id_circuito,
+			id_tiempo,
 			id_auto,
-			MAX(cant_combustible) - MIN(cant_combustible)
+			SUM(consumo_combustible_sector)
 		FROM AJO_DER.BI_FACT_medicion medicion
 			JOIN AJO_DER.BI_DIM_circuito circuito ON medicion.id_circuito = circuito.id
-		GROUP BY id_circuito, id_auto
-		ORDER BY id_circuito
+		GROUP BY id_circuito, id_tiempo, id_auto
+		ORDER BY id_circuito, id_auto
 	RETURN
 	END
 GO
-*/
 
 CREATE FUNCTION AJO_DER.BI_ranking_incidentes_x_Circuito_x_anio()
 	RETURNS @Result TABLE (
@@ -322,10 +321,11 @@ CREATE TABLE #BI_medicion_aux(
 	id_auto INT, -- FK
 	id_circuito INT, -- FK
 	nro_vuelta DECIMAL(18,0),
+	id_sector INT, --FK
 
-	desgaste_promedio_motor_vuelta DECIMAL(18,6),
-	desgaste_promedio_caja_vuelta DECIMAL(18,4),
-	desgaste_promedio_frenos_vuelta DECIMAL(18,4)
+	desgaste_promedio_motor_sector DECIMAL(18,6),
+	desgaste_promedio_caja_sector DECIMAL(18,4),
+	desgaste_promedio_frenos_sector DECIMAL(18,4)
 );
 GO
 
@@ -335,8 +335,9 @@ CREATE TABLE #BI_medicion_aux_2(
 	id_auto INT, -- FK
 	id_circuito INT, -- FK
 	nro_vuelta DECIMAL(18,0),
+	id_sector INT, --FK
 
-	desgaste_promedio_neumaticos_vuelta DECIMAL(18,6)
+	desgaste_promedio_neumaticos_sector DECIMAL(18,6)
 	--id_tipo_neumatico_1 INT,
 	--id_tipo_neumatico_2 INT,
 	--id_tipo_neumatico_3 INT,
@@ -349,8 +350,12 @@ CREATE TABLE #BI_medicion_aux_3(
 	id_tiempo INT, -- FK
 	id_auto INT, -- FK
 	id_circuito INT, -- FK
+	nro_vuelta DECIMAL(18,0),
+	id_sector INT, --FK
 
-	consumo_combustible_circuito DECIMAL(18,2)
+	tiempo_vuelta_sector DECIMAL(18,10),
+	velocidad_maxima_sector DECIMAL(18,4),
+	consumo_combustible_sector DECIMAL(18,4)
 );
 GO
 
@@ -360,6 +365,7 @@ SELECT
 	medicion.id_auto, 
 	carrera.id_circuito,
 	nro_vuelta,
+	id_sector,
 
 	MAX(estado_de_motor.potencia) - MIN(estado_de_motor.potencia),
 	MAX(estado_de_caja_de_cambios.desgaste) - MIN(estado_de_caja_de_cambios.desgaste),
@@ -396,8 +402,7 @@ FROM AJO_DER.medicion
 		AND freno_4.id_posicion = 4
 	JOIN AJO_DER.estado_freno estado_freno_4 ON estado_freno_4.id_medicion = medicion.id 
 		AND estado_freno_4.id_freno = freno_4.id
-
-GROUP BY medicion.id_auto, medicion.nro_vuelta, carrera.id_circuito, tiempo.id
+GROUP BY medicion.id_auto, carrera.id_circuito, tiempo.id, medicion.nro_vuelta, id_sector
 
 INSERT INTO #BI_medicion_aux_2
 SELECT
@@ -405,6 +410,7 @@ SELECT
 	medicion.id_auto, 
 	carrera.id_circuito,
 	nro_vuelta,
+	id_sector,
 
 	(MAX(estado_neumatico_1.profundidad) - MIN(estado_neumatico_1.profundidad) +
 	 MAX(estado_neumatico_2.profundidad) - MIN(estado_neumatico_2.profundidad) +
@@ -440,7 +446,7 @@ FROM AJO_DER.medicion
 		AND neumatico_4.id_posicion = 4
 	JOIN AJO_DER.estado_neumatico estado_neumatico_4 ON estado_neumatico_4.id_medicion = medicion.id 
 		AND estado_neumatico_4.id_neumatico = neumatico_4.id
-GROUP BY medicion.id_auto, medicion.nro_vuelta, carrera.id_circuito, tiempo.id
+GROUP BY medicion.id_auto, carrera.id_circuito, tiempo.id, medicion.nro_vuelta, id_sector
 
 
 INSERT INTO #BI_medicion_aux_3
@@ -448,12 +454,33 @@ SELECT
 	tiempo.id,
 	medicion.id_auto, 
 	carrera.id_circuito,
+	nro_vuelta,
+	id_sector,
+
+	MAX(medicion.tiempo_vuelta),
+	MAX(medicion.velocidad),
 	MAX(cant_combustible) - MIN(cant_combustible)
+
 FROM AJO_DER.medicion
 	JOIN AJO_DER.carrera ON id_carrera = carrera.id
 	JOIN AJO_DER.BI_DIM_tiempo tiempo ON YEAR(carrera.fecha) = tiempo.anio
 		AND AJO_DER.BI_obtener_cuatrimestre(carrera.fecha) = tiempo.cuatrimestre
-GROUP BY medicion.id_auto, carrera.id_circuito, tiempo.id
+GROUP BY medicion.id_auto, carrera.id_circuito, tiempo.id, medicion.nro_vuelta, id_sector
+
+/*
+INSERT INTO #BI_medicion_aux_4
+SELECT
+	tiempo.id,
+	medicion.id_auto, 
+	carrera.id_circuito,
+	nro_vuelta,
+	id_sector,
+
+FROM AJO_DER.medicion
+	JOIN AJO_DER.carrera ON id_carrera = carrera.id
+	JOIN AJO_DER.BI_DIM_tiempo tiempo ON YEAR(carrera.fecha) = tiempo.anio
+		AND AJO_DER.BI_obtener_cuatrimestre(carrera.fecha) = tiempo.cuatrimestre
+*/
 
 
 INSERT INTO AJO_DER.BI_FACT_medicion
@@ -463,18 +490,18 @@ SELECT DISTINCT
 	auto.id_piloto,
 	auto.id_escuderia, 
 	carrera.id_circuito,
-	id_sector,
+	medicion.id_sector,
 	
 	medicion.nro_vuelta,
 
-	MAX(medicion.tiempo_vuelta) OVER (PARTITION BY medicion.id_auto, medicion.nro_vuelta, carrera.id_circuito, tiempo.anio), -- puede dar 0...
-	MAX(medicion.velocidad) OVER (PARTITION BY medicion.id_auto, id_sector, carrera.id_circuito, tiempo.anio),
-	#BI_medicion_aux_3.consumo_combustible_circuito,
+	#BI_medicion_aux_3.tiempo_vuelta_sector, -- puede dar 0...
+	#BI_medicion_aux_3.velocidad_maxima_sector,
+	#BI_medicion_aux_3.consumo_combustible_sector,
 
-	#BI_medicion_aux.desgaste_promedio_motor_vuelta,
-	#BI_medicion_aux.desgaste_promedio_caja_vuelta,
-	#BI_medicion_aux.desgaste_promedio_frenos_vuelta,
-	#BI_medicion_aux_2.desgaste_promedio_neumaticos_vuelta
+	#BI_medicion_aux.desgaste_promedio_motor_sector,
+	#BI_medicion_aux.desgaste_promedio_caja_sector,
+	#BI_medicion_aux.desgaste_promedio_frenos_sector,
+	#BI_medicion_aux_2.desgaste_promedio_neumaticos_sector
 
 	--#BI_medicion_aux_2.id_tipo_neumatico_1,
 	--#BI_medicion_aux_2.id_tipo_neumatico_2,
@@ -486,20 +513,31 @@ FROM AJO_DER.medicion
 		AND AJO_DER.BI_obtener_cuatrimestre(carrera.fecha) = tiempo.cuatrimestre
 	JOIN AJO_DER.auto ON id_auto = auto.id
 
-	JOIN #BI_medicion_aux ON 
-		tiempo.id = #BI_medicion_aux.id_tiempo AND
+	JOIN #BI_medicion_aux ON
 		medicion.id_auto = #BI_medicion_aux.id_auto AND
 		carrera.id_circuito = #BI_medicion_aux.id_circuito AND
-		medicion.nro_vuelta = #BI_medicion_aux.nro_vuelta
+		tiempo.id = #BI_medicion_aux.id_tiempo AND
+		medicion.nro_vuelta = #BI_medicion_aux.nro_vuelta AND
+		medicion.id_sector = #BI_medicion_aux.id_sector
 	JOIN #BI_medicion_aux_2 ON
-		tiempo.id = #BI_medicion_aux_2.id_tiempo AND
 		medicion.id_auto = #BI_medicion_aux_2.id_auto AND
 		carrera.id_circuito = #BI_medicion_aux_2.id_circuito AND
-		medicion.nro_vuelta = #BI_medicion_aux_2.nro_vuelta
+		tiempo.id = #BI_medicion_aux_2.id_tiempo AND
+		medicion.nro_vuelta = #BI_medicion_aux_2.nro_vuelta AND
+		medicion.id_sector = #BI_medicion_aux_2.id_sector
 	JOIN #BI_medicion_aux_3 ON
-		tiempo.id = #BI_medicion_aux_3.id_tiempo AND
 		medicion.id_auto = #BI_medicion_aux_3.id_auto AND
-		carrera.id_circuito = #BI_medicion_aux_3.id_circuito
+		carrera.id_circuito = #BI_medicion_aux_3.id_circuito AND
+		tiempo.id = #BI_medicion_aux_3.id_tiempo AND
+		medicion.nro_vuelta = #BI_medicion_aux_3.nro_vuelta AND
+		medicion.id_sector = #BI_medicion_aux_3.id_sector
+
+/*GROUP BY medicion.id_auto, carrera.id_circuito, tiempo.id, medicion.nro_vuelta, medicion.id_sector,
+	auto.id_piloto, auto.id_escuderia,
+	#BI_medicion_aux.desgaste_promedio_motor_sector,
+	#BI_medicion_aux.desgaste_promedio_caja_sector,
+	#BI_medicion_aux.desgaste_promedio_frenos_sector,
+	#BI_medicion_aux_2.desgaste_promedio_neumaticos_sector*/
 
 DROP TABLE #BI_medicion_aux
 GO
@@ -544,10 +582,10 @@ GO
 -- Desgaste promedio de cada componente de cada auto por vuelta por circuito.
 CREATE VIEW AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito AS
 	SELECT
-		desgaste_promedio_motor_vuelta 'Desgaste Promedio de Motor',
-		desgaste_promedio_caja_vuelta 'Desgaste Promedio de Caja de Cambios',
-		desgaste_promedio_frenos_vuelta 'Desgaste Promedio de Frenos',
-		desgaste_promedio_neumaticos_vuelta 'Desgaste Promedio de Neumaticos',
+		SUM(desgaste_promedio_motor_sector) 'Desgaste Promedio de Motor',
+		SUM(desgaste_promedio_caja_sector) 'Desgaste Promedio de Caja de Cambios',
+		SUM(desgaste_promedio_frenos_sector) 'Desgaste Promedio de Frenos',
+		SUM(desgaste_promedio_neumaticos_sector) 'Desgaste Promedio de Neumaticos',
 		auto.modelo AS 'Modelo del Auto', 
 		auto.numero_auto AS 'Numero del Auto de su Escuderia',
 		medicion.nro_vuelta AS 'Numero de Vuelta', 
@@ -555,36 +593,28 @@ CREATE VIEW AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circui
 	FROM AJO_DER.BI_FACT_medicion medicion
 		JOIN AJO_DER.BI_DIM_auto auto ON auto.id = medicion.id_auto
 		JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id = medicion.id_circuito
-	GROUP BY medicion.id_auto, auto.modelo, auto.numero_auto, medicion.nro_vuelta, medicion.id_circuito, circuito.nombre,
-		desgaste_promedio_motor_vuelta,
-		desgaste_promedio_caja_vuelta,
-		desgaste_promedio_frenos_vuelta,
-		desgaste_promedio_neumaticos_vuelta
-	--GROUP BY medicion.id_auto, auto.modelo, auto.numero_auto, medicion.nro_vuelta, medicion.id_circuito, circuito.nombre
+	GROUP BY medicion.id_auto, auto.modelo, auto.numero_auto, medicion.nro_vuelta, medicion.id_circuito, circuito.nombre
 GO
 
 -- Mejor tiempo de vuelta de cada escudería por circuito por año.
 -- El mejor tiempo está dado por el mínimo tiempo en que un auto logra realizar una vuelta de un circuito.
 CREATE VIEW AJO_DER.BI_mejor_tiempo_de_vuelta_de_cada_escuderia AS
 	SELECT
-		MIN(tiempo_vuelta_total) AS 'Mejor Tiempo de Vuelta',
-		escuderia.nombre AS 'Escuderia',
-		circuito.nombre AS 'Circuito',
-		tiempo.anio AS 'Año'
-	FROM AJO_DER.BI_FACT_medicion medicion
-		JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id = medicion.id_escuderia
-		JOIN AJO_DER.BI_DIM_circuito circuito on circuito.id = medicion.id_circuito
-		JOIN AJO_DER.BI_DIM_tiempo tiempo on tiempo.id = medicion.id_tiempo
-	WHERE tiempo_vuelta_total != 0
-	GROUP BY escuderia.nombre, circuito.nombre, tiempo.anio
+		MIN(tiempo_vuelta) AS 'Mejor Tiempo de Vuelta',
+		escuderia AS 'Escuderia',
+		circuito AS 'Circuito',
+		anio AS 'Año'
+	FROM AJO_DER.BI_obtener_tiempos_de_vuelta()
+	WHERE tiempo_vuelta != 0
+	GROUP BY escuderia, circuito, anio
 GO
 
 -- Los 3 de circuitos con mayor consumo de combustible promedio
 CREATE VIEW AJO_DER.BI_circuitos_con_mayor_consumo_de_combustible_promedio AS
 	SELECT TOP 3
 		id_circuito AS 'Circuito',
-		AVG(DISTINCT consumo_combustible_circuito) AS 'Consumo de Combustible Promedio'
-	FROM AJO_DER.BI_FACT_medicion
+		AVG(consumo_combustible) AS 'Consumo de Combustible Promedio'
+	FROM AJO_DER.BI_obtener_Consumo_x_Auto()
 	GROUP BY id_circuito, id_tiempo
 	ORDER BY 2 DESC
 GO
