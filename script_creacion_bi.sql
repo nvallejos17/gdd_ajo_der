@@ -571,10 +571,16 @@ GO
 -- Promedio de incidentes que presenta cada escudería por año en los distintos tipo de sectores
 CREATE VIEW AJO_DER.BI_promedio_incidentes_escuderia_anio_tipo_de_sector AS
 	SELECT
-		COUNT(*) * 1.0 / (SELECT COUNT(*) FROM AJO_DER.BI_DIM_tipo_sector) AS 'Promedio de incidentes',
+		SUM(CASE WHEN tipo_sector.tipo = 'Frenada' THEN 1.0 ELSE 0.0 END)
+		AS 'Promedio de incidentes en Frenada',
+		SUM(CASE WHEN tipo_sector.tipo = 'Recta' THEN 1.0 ELSE 0.0 END)
+		AS 'Promedio de incidentes en Recta',
+		SUM(CASE WHEN tipo_sector.tipo = 'Curva' THEN 1.0 ELSE 0.0 END)
+		AS 'Promedio de incidentes en Curva',
 		escuderia.nombre AS 'Escuderia',
 		fecha.anio AS 'Año'
 	FROM AJO_DER.BI_FACT_incidente_auto incidente_auto
+		JOIN AJO_DER.BI_DIM_tipo_sector tipo_sector ON tipo_sector.id = incidente_auto.id_tipo_sector
 		JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id = incidente_auto.id_escuderia
 		JOIN AJO_DER.BI_DIM_tiempo fecha ON fecha.id = incidente_auto.id_tiempo
 	GROUP BY escuderia.nombre, fecha.anio
