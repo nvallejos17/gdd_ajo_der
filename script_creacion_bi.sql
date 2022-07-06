@@ -163,12 +163,12 @@ CREATE TABLE AJO_DER.BI_FACT_medicion (
 	desgaste_promedio_motor_sector DECIMAL(18,6),
 	desgaste_promedio_caja_sector DECIMAL(18,4),
 	desgaste_promedio_frenos_sector DECIMAL(18,4),
-	desgaste_promedio_neumaticos_sector DECIMAL(18,6)
+	desgaste_promedio_neumaticos_sector DECIMAL(18,6),
 
-	--id_tipo_neumatico_1 INT REFERENCES AJO_DER.BI_DIM_tipo_neumatico, -- FK
-	--id_tipo_neumatico_2 INT REFERENCES AJO_DER.BI_DIM_tipo_neumatico, -- FK
-	--id_tipo_neumatico_3 INT REFERENCES AJO_DER.BI_DIM_tipo_neumatico, -- FK
-	--id_tipo_neumatico_4 INT REFERENCES AJO_DER.BI_DIM_tipo_neumatico, -- FK
+	id_tipo_neumatico_1_inicio_sector INT REFERENCES AJO_DER.BI_DIM_tipo_neumatico, -- FK
+	id_tipo_neumatico_2_inicio_sector INT REFERENCES AJO_DER.BI_DIM_tipo_neumatico, -- FK
+	id_tipo_neumatico_3_inicio_sector INT REFERENCES AJO_DER.BI_DIM_tipo_neumatico, -- FK
+	id_tipo_neumatico_4_inicio_sector INT REFERENCES AJO_DER.BI_DIM_tipo_neumatico  -- FK
 );
 
 CREATE TABLE AJO_DER.BI_FACT_parada_box (
@@ -353,11 +353,12 @@ CREATE TABLE #BI_medicion_aux_2(
 	nro_vuelta DECIMAL(18,0),
 	id_sector INT, --FK
 
-	desgaste_promedio_neumaticos_sector DECIMAL(18,6)
-	--id_tipo_neumatico_1 INT,
-	--id_tipo_neumatico_2 INT,
-	--id_tipo_neumatico_3 INT,
-	--id_tipo_neumatico_4 INT
+	desgaste_promedio_neumaticos_sector DECIMAL(18,6),
+
+	id_tipo_neumatico_1_inicio_sector INT,
+	id_tipo_neumatico_2_inicio_sector INT,
+	id_tipo_neumatico_3_inicio_sector INT,
+	id_tipo_neumatico_4_inicio_sector INT
 );
 GO
 
@@ -386,12 +387,12 @@ CREATE TABLE #BI_medicion_aux_4(
 	desgaste_promedio_motor_sector DECIMAL(18,6),
 	desgaste_promedio_caja_sector DECIMAL(18,4),
 	desgaste_promedio_frenos_sector DECIMAL(18,4),
-	desgaste_promedio_neumaticos_sector DECIMAL(18,6)
+	desgaste_promedio_neumaticos_sector DECIMAL(18,6),
 
-	--id_tipo_neumatico_1 INT,
-	--id_tipo_neumatico_2 INT,
-	--id_tipo_neumatico_3 INT,
-	--id_tipo_neumatico_4 INT
+	id_tipo_neumatico_1_inicio_sector INT,
+	id_tipo_neumatico_2_inicio_sector INT,
+	id_tipo_neumatico_3_inicio_sector INT,
+	id_tipo_neumatico_4_inicio_sector INT
 );
 GO
 
@@ -415,11 +416,11 @@ FROM AJO_DER.medicion
 	JOIN AJO_DER.BI_DIM_tiempo tiempo ON YEAR(carrera.fecha) = tiempo.anio
 		AND AJO_DER.BI_obtener_cuatrimestre(carrera.fecha) = tiempo.cuatrimestre
 
-
 	JOIN AJO_DER.estado_de_motor ON estado_de_motor.id_medicion = medicion.id
 	JOIN AJO_DER.estado_de_caja_de_cambios ON estado_de_caja_de_cambios.id_medicion = medicion.id
 
-	JOIN AJO_DER.freno freno_1 ON freno_1.id_auto = medicion.id_auto
+
+	JOIN AJO_DER.freno freno_1 ON freno_1.id_auto = medicion.id_auto 
 		AND freno_1.id_posicion = 1
 	JOIN AJO_DER.estado_freno estado_freno_1 ON estado_freno_1.id_medicion = medicion.id 
 		AND estado_freno_1.id_freno = freno_1.id
@@ -434,11 +435,12 @@ FROM AJO_DER.medicion
 	JOIN AJO_DER.estado_freno estado_freno_3 ON estado_freno_3.id_medicion = medicion.id 
 		AND estado_freno_3.id_freno = freno_3.id
 
-	JOIN AJO_DER.freno freno_4 ON freno_4.id_auto = medicion.id_auto 
+	JOIN AJO_DER.freno freno_4 ON freno_4.id_auto = medicion.id_auto  
 		AND freno_4.id_posicion = 4
 	JOIN AJO_DER.estado_freno estado_freno_4 ON estado_freno_4.id_medicion = medicion.id 
 		AND estado_freno_4.id_freno = freno_4.id
 GROUP BY medicion.id_auto, carrera.id_circuito, tiempo.id, medicion.nro_vuelta, id_sector
+
 
 INSERT INTO #BI_medicion_aux_2
 SELECT
@@ -452,16 +454,78 @@ SELECT
 	 MAX(estado_neumatico_2.profundidad) - MIN(estado_neumatico_2.profundidad) +
 	 MAX(estado_neumatico_3.profundidad) - MIN(estado_neumatico_3.profundidad) +
 	 MAX(estado_neumatico_4.profundidad) - MIN(estado_neumatico_4.profundidad) 
-	 ) / 4
+	 ) / 4,
 
-	--neumatico_1.id_tipo_neumatico,
-	--neumatico_2.id_tipo_neumatico,
-	--neumatico_3.id_tipo_neumatico,
-	--neumatico_4.id_tipo_neumatico
+	CASE WHEN COUNT(DISTINCT neumatico_1.id_tipo_neumatico) > 1 THEN
+	(
+		SELECT TOP 1 n1.id_tipo_neumatico
+		FROM AJO_DER.medicion m1
+			JOIN AJO_DER.carrera carrera1 ON carrera1.id = m1.id_carrera
+			JOIN AJO_DER.estado_neumatico e1 ON e1.id_medicion = m1.id
+			JOIN AJO_DER.neumatico n1 ON n1.id = e1.id_neumatico AND 
+				n1.id_posicion = 1
+		where
+			m1.id_auto = medicion.id_auto AND
+			carrera1.id_circuito = carrera.id_circuito AND
+			m1.nro_vuelta = medicion.nro_vuelta AND
+			m1.id_sector = medicion.id_sector
+		ORDER BY m1.distancia_vuelta
+	) 
+	ELSE MIN(neumatico_1.id_tipo_neumatico) END,
+	CASE WHEN COUNT(DISTINCT neumatico_2.id_tipo_neumatico) > 1 THEN
+	(
+		SELECT TOP 1 n1.id_tipo_neumatico
+		FROM AJO_DER.medicion m1
+			JOIN AJO_DER.carrera carrera1 ON carrera1.id = m1.id_carrera
+			JOIN AJO_DER.estado_neumatico e1 ON e1.id_medicion = m1.id
+			JOIN AJO_DER.neumatico n1 ON n1.id = e1.id_neumatico AND 
+				n1.id_posicion = 1
+		where
+			m1.id_auto = medicion.id_auto AND
+			carrera1.id_circuito = carrera.id_circuito AND
+			m1.nro_vuelta = medicion.nro_vuelta AND
+			m1.id_sector = medicion.id_sector
+		ORDER BY m1.distancia_vuelta
+	) 
+	ELSE MIN(neumatico_2.id_tipo_neumatico) END,
+	CASE WHEN COUNT(DISTINCT neumatico_3.id_tipo_neumatico) > 1 THEN
+	(
+		SELECT TOP 1 n1.id_tipo_neumatico
+		FROM AJO_DER.medicion m1
+			JOIN AJO_DER.carrera carrera1 ON carrera1.id = m1.id_carrera
+			JOIN AJO_DER.estado_neumatico e1 ON e1.id_medicion = m1.id
+			JOIN AJO_DER.neumatico n1 ON n1.id = e1.id_neumatico AND 
+				n1.id_posicion = 1
+		where
+			m1.id_auto = medicion.id_auto AND
+			carrera1.id_circuito = carrera.id_circuito AND
+			m1.nro_vuelta = medicion.nro_vuelta AND
+			m1.id_sector = medicion.id_sector
+		ORDER BY m1.distancia_vuelta
+	) 
+	ELSE MIN(neumatico_3.id_tipo_neumatico) END,
+	CASE WHEN COUNT(DISTINCT neumatico_4.id_tipo_neumatico) > 1 THEN
+	(
+		SELECT TOP 1 n1.id_tipo_neumatico
+		FROM AJO_DER.medicion m1
+			JOIN AJO_DER.carrera carrera1 ON carrera1.id = m1.id_carrera
+			JOIN AJO_DER.estado_neumatico e1 ON e1.id_medicion = m1.id
+			JOIN AJO_DER.neumatico n1 ON n1.id = e1.id_neumatico AND 
+				n1.id_posicion = 1
+		where
+			m1.id_auto = medicion.id_auto AND
+			carrera1.id_circuito = carrera.id_circuito AND
+			m1.nro_vuelta = medicion.nro_vuelta AND
+			m1.id_sector = medicion.id_sector
+		ORDER BY m1.distancia_vuelta
+	) 
+	ELSE MIN(neumatico_4.id_tipo_neumatico) END
+
 FROM AJO_DER.medicion
 	JOIN AJO_DER.carrera ON id_carrera = carrera.id
 	JOIN AJO_DER.BI_DIM_tiempo tiempo ON YEAR(carrera.fecha) = tiempo.anio
 		AND AJO_DER.BI_obtener_cuatrimestre(carrera.fecha) = tiempo.cuatrimestre
+
 
 	JOIN AJO_DER.neumatico neumatico_1 ON neumatico_1.id_auto = medicion.id_auto
 		AND neumatico_1.id_posicion = 1
@@ -515,12 +579,12 @@ SELECT DISTINCT
 	#BI_medicion_aux.desgaste_promedio_motor_sector,
 	#BI_medicion_aux.desgaste_promedio_caja_sector,
 	#BI_medicion_aux.desgaste_promedio_frenos_sector,
-	#BI_medicion_aux_2.desgaste_promedio_neumaticos_sector
+	#BI_medicion_aux_2.desgaste_promedio_neumaticos_sector,
 
-	--#BI_medicion_aux_2.id_tipo_neumatico_1,
-	--#BI_medicion_aux_2.id_tipo_neumatico_2,
-	--#BI_medicion_aux_2.id_tipo_neumatico_3,
-	--#BI_medicion_aux_2.id_tipo_neumatico_4
+	#BI_medicion_aux_2.id_tipo_neumatico_1_inicio_sector,
+	#BI_medicion_aux_2.id_tipo_neumatico_2_inicio_sector,
+	#BI_medicion_aux_2.id_tipo_neumatico_3_inicio_sector,
+	#BI_medicion_aux_2.id_tipo_neumatico_4_inicio_sector
 
 FROM AJO_DER.medicion
 	JOIN AJO_DER.carrera ON id_carrera = carrera.id
@@ -552,19 +616,19 @@ SELECT DISTINCT
 	
 	medicion.nro_vuelta,
 
-	#BI_medicion_aux_3.tiempo_vuelta_sector, -- puede dar 0...
+	#BI_medicion_aux_3.tiempo_vuelta_sector, -- puede dar 0, ya esta contemplado igual
 	#BI_medicion_aux_3.velocidad_maxima_sector,
 	#BI_medicion_aux_3.consumo_combustible_sector,
 
 	#BI_medicion_aux_4.desgaste_promedio_motor_sector,
 	#BI_medicion_aux_4.desgaste_promedio_caja_sector,
 	#BI_medicion_aux_4.desgaste_promedio_frenos_sector,
-	#BI_medicion_aux_4.desgaste_promedio_neumaticos_sector
+	#BI_medicion_aux_4.desgaste_promedio_neumaticos_sector,
 
-	--#BI_medicion_aux_4.id_tipo_neumatico_1,
-	--#BI_medicion_aux_4.id_tipo_neumatico_2,
-	--#BI_medicion_aux_4.id_tipo_neumatico_3,
-	--#BI_medicion_aux_4.id_tipo_neumatico_4
+	#BI_medicion_aux_4.id_tipo_neumatico_1_inicio_sector,
+	#BI_medicion_aux_4.id_tipo_neumatico_2_inicio_sector,
+	#BI_medicion_aux_4.id_tipo_neumatico_3_inicio_sector,
+	#BI_medicion_aux_4.id_tipo_neumatico_4_inicio_sector
 
 FROM AJO_DER.medicion
 	JOIN AJO_DER.carrera ON id_carrera = carrera.id
@@ -585,12 +649,6 @@ FROM AJO_DER.medicion
 		medicion.nro_vuelta = #BI_medicion_aux_4.nro_vuelta AND
 		medicion.id_sector = #BI_medicion_aux_4.id_sector
 
-/*GROUP BY medicion.id_auto, carrera.id_circuito, tiempo.id, medicion.nro_vuelta, medicion.id_sector,
-	auto.id_piloto, auto.id_escuderia,
-	#BI_medicion_aux.desgaste_promedio_motor_sector,
-	#BI_medicion_aux.desgaste_promedio_caja_sector,
-	#BI_medicion_aux.desgaste_promedio_frenos_sector,
-	#BI_medicion_aux_2.desgaste_promedio_neumaticos_sector*/
 
 DROP TABLE #BI_medicion_aux
 GO
