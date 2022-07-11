@@ -1,7 +1,7 @@
 USE GD1C2022
 GO
 
--- Eliminacion de tablas
+-- Eliminacion de tablas si existen
 IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'BI_FACT_medicion')
 	DROP TABLE AJO_DER.BI_FACT_medicion
 
@@ -36,21 +36,6 @@ IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'BI_DIM_tiempo')
 	DROP TABLE AJO_DER.BI_DIM_tiempo
 GO
 
-IF EXISTS(SELECT name FROM tempdb.sys.tables WHERE name LIKE '#BI_medicion_aux%')
-	DROP TABLE #BI_medicion_aux
-GO
-
-IF EXISTS(SELECT name FROM tempdb.sys.tables WHERE name LIKE '#BI_medicion_aux_2%')
-	DROP TABLE #BI_medicion_aux_2
-GO
-
-IF EXISTS(SELECT name FROM tempdb.sys.tables WHERE name LIKE '#BI_medicion_aux_3%')
-	DROP TABLE #BI_medicion_aux_3
-GO
-
-IF EXISTS(SELECT name FROM tempdb.sys.tables WHERE name LIKE '#BI_medicion_aux_4%')
-	DROP TABLE #BI_medicion_aux_4
-GO
 
 -- Eliminacion de vistas si existen
 IF OBJECT_ID('AJO_DER.BI_desgaste_promedio_componentes_cada_auto_x_vuelta_x_circuito') IS NOT NULL
@@ -80,6 +65,7 @@ IF OBJECT_ID('AJO_DER.BI_circuitos_mas_peligrosos_del_anio') IS NOT NULL
 IF OBJECT_ID('AJO_DER.BI_promedio_incidentes_escuderia_anio_tipo_de_sector') IS NOT NULL
 	DROP VIEW AJO_DER.BI_promedio_incidentes_escuderia_anio_tipo_de_sector
 
+
 -- Eliminacion de funciones si existen
 IF OBJECT_ID('AJO_DER.BI_obtener_cuatrimestre') IS NOT NULL
 	DROP FUNCTION AJO_DER.BI_obtener_cuatrimestre
@@ -101,7 +87,34 @@ IF OBJECT_ID('AJO_DER.BI_ranking_incidentes_x_Circuito_x_anio') IS NOT NULL
 	DROP FUNCTION AJO_DER.BI_ranking_incidentes_x_Circuito_x_anio
 GO
 
---Creacion de tablas
+
+-- Eliminacion de indices si existen
+IF EXISTS(SELECT name FROM sys.indexes WHERE name LIKE 'BI_IDX_medicion_1')
+	DROP INDEX BI_IDX_medicion_1 ON AJO_DER.estado_de_motor
+GO
+
+IF EXISTS(SELECT name FROM sys.indexes WHERE name LIKE 'BI_IDX_medicion_2')
+	DROP INDEX BI_IDX_medicion_2 ON AJO_DER.estado_de_caja_de_cambios
+GO
+
+IF EXISTS(SELECT name FROM sys.indexes WHERE name LIKE 'BI_IDX_medicion_3')
+	DROP INDEX BI_IDX_medicion_3 ON AJO_DER.estado_freno
+GO
+
+IF EXISTS(SELECT name FROM sys.indexes WHERE name LIKE 'BI_IDX_medicion_4')
+	DROP INDEX BI_IDX_medicion_4 ON AJO_DER.estado_neumatico
+GO
+
+IF EXISTS(SELECT name FROM sys.indexes WHERE name LIKE 'BI_IDX_auto')
+	DROP INDEX BI_IDX_auto ON AJO_DER.medicion
+GO
+
+IF EXISTS(SELECT name FROM sys.indexes WHERE name LIKE 'BI_IDX_sector')
+	DROP INDEX BI_IDX_sector ON AJO_DER.medicion
+GO
+
+
+-- Creacion de tablas
 CREATE TABLE AJO_DER.BI_DIM_auto (
 	id INT NOT NULL IDENTITY PRIMARY KEY,
 	modelo NVARCHAR(255),
@@ -189,8 +202,29 @@ CREATE TABLE AJO_DER.BI_FACT_incidente_auto (
 );
 GO
 
---Funciones
 
+-- Creacion de indices
+CREATE INDEX BI_IDX_medicion_1 ON AJO_DER.estado_de_motor(id_medicion)
+GO
+
+CREATE INDEX BI_IDX_medicion_2 ON AJO_DER.estado_de_caja_de_cambios(id_medicion)
+GO
+
+CREATE INDEX BI_IDX_medicion_3 ON AJO_DER.estado_freno(id_medicion)
+GO
+
+CREATE INDEX BI_IDX_medicion_4 ON AJO_DER.estado_neumatico(id_medicion)
+GO
+
+
+CREATE INDEX BI_IDX_auto ON AJO_DER.medicion(id_auto)
+GO
+
+CREATE INDEX BI_IDX_sector ON AJO_DER.medicion(id_sector)
+GO
+
+
+-- Creacion de funciones
 CREATE FUNCTION AJO_DER.BI_obtener_cuatrimestre(@fecha DATE)
 	RETURNS INT
 	AS
@@ -285,44 +319,37 @@ SELECT modelo, numero_auto
 FROM AJO_DER.auto
 
 -- Carga de datos de piloto
-
 INSERT INTO AJO_DER.BI_DIM_piloto
 SELECT nombre, apellido
 FROM AJO_DER.piloto
 
 -- Carga de datos de escuderia
-
 INSERT INTO AJO_DER.BI_DIM_escuderia
 SELECT nombre
 FROM AJO_DER.escuderia
 
 -- Carga de datos de circuito
-
 INSERT INTO AJO_DER.BI_DIM_circuito
 SELECT nombre
 FROM AJO_DER.circuito
 
 -- Carga de datos de tipo_neumatico
-
 INSERT INTO AJO_DER.BI_DIM_tipo_neumatico
 SELECT tipo
 FROM AJO_DER.tipo_neumatico
 
 -- Carga de datos de tipo_incidente
-
 INSERT INTO AJO_DER.BI_DIM_tipo_incidente
 SELECT tipo
 FROM AJO_DER.tipo_incidente
 
 -- Carga de datos de sector
-
 INSERT INTO AJO_DER.BI_DIM_sector
 SELECT tipo
 FROM AJO_DER.sector s
 	JOIN AJO_DER.tipo_sector t ON s.id_tipo_sector = t.id 
 
 -- Carga de datos de tiempo
-
 INSERT INTO AJO_DER.BI_DIM_tiempo
 SELECT DISTINCT 
 	YEAR(fecha), 
@@ -330,79 +357,20 @@ SELECT DISTINCT
 FROM AJO_DER.carrera
 
 -- Carga de datos de medicion
-
-CREATE TABLE #BI_medicion_aux(
-	id INT NOT NULL IDENTITY PRIMARY KEY,
-	id_tiempo INT, -- FK
-	id_auto INT, -- FK
-	id_circuito INT, -- FK
-	nro_vuelta DECIMAL(18,0),
-	id_sector INT, --FK
-
-	desgaste_promedio_motor_sector DECIMAL(18,6),
-	desgaste_promedio_caja_sector DECIMAL(18,4),
-	desgaste_promedio_frenos_sector DECIMAL(18,4)
-);
-GO
-
-CREATE TABLE #BI_medicion_aux_2(
-	id INT NOT NULL IDENTITY PRIMARY KEY,
-	id_tiempo INT, -- FK
-	id_auto INT, -- FK
-	id_circuito INT, -- FK
-	nro_vuelta DECIMAL(18,0),
-	id_sector INT, --FK
-
-	desgaste_promedio_neumaticos_sector DECIMAL(18,6),
-
-	id_tipo_neumatico_1_inicio_sector INT,
-	id_tipo_neumatico_2_inicio_sector INT,
-	id_tipo_neumatico_3_inicio_sector INT,
-	id_tipo_neumatico_4_inicio_sector INT
-);
-GO
-
-CREATE TABLE #BI_medicion_aux_3(
-	id INT NOT NULL IDENTITY PRIMARY KEY,
-	id_tiempo INT, -- FK
-	id_auto INT, -- FK
-	id_circuito INT, -- FK
-	nro_vuelta DECIMAL(18,0),
-	id_sector INT, --FK
-
-	tiempo_vuelta_sector DECIMAL(18,10),
-	velocidad_maxima_sector DECIMAL(18,4),
-	consumo_combustible_sector DECIMAL(18,4)
-);
-GO
-
-CREATE TABLE #BI_medicion_aux_4(
-	id INT NOT NULL IDENTITY PRIMARY KEY,
-	id_tiempo INT, -- FK
-	id_auto INT, -- FK
-	id_circuito INT, -- FK
-	nro_vuelta DECIMAL(18,0),
-	id_sector INT, --FK
-
-	desgaste_promedio_motor_sector DECIMAL(18,6),
-	desgaste_promedio_caja_sector DECIMAL(18,4),
-	desgaste_promedio_frenos_sector DECIMAL(18,4),
-	desgaste_promedio_neumaticos_sector DECIMAL(18,6),
-
-	id_tipo_neumatico_1_inicio_sector INT,
-	id_tipo_neumatico_2_inicio_sector INT,
-	id_tipo_neumatico_3_inicio_sector INT,
-	id_tipo_neumatico_4_inicio_sector INT
-);
-GO
-
-INSERT INTO #BI_medicion_aux
+INSERT INTO AJO_DER.BI_FACT_medicion
 SELECT
 	tiempo.id,
-	medicion.id_auto, 
+	medicion.id_auto,
+	auto.id_piloto,
+	auto.id_escuderia, 
 	carrera.id_circuito,
-	nro_vuelta,
-	id_sector,
+	medicion.id_sector,
+	
+	medicion.nro_vuelta,
+
+	MAX(medicion.tiempo_vuelta), -- puede dar 0, ya esta contemplado igual
+	MAX(medicion.velocidad),
+	MAX(cant_combustible) - MIN(cant_combustible),
 
 	MAX(estado_de_motor.potencia) - MIN(estado_de_motor.potencia),
 	MAX(estado_de_caja_de_cambios.desgaste) - MIN(estado_de_caja_de_cambios.desgaste),
@@ -410,45 +378,7 @@ SELECT
 	 MAX(estado_freno_2.grosor_pastilla) - MIN(estado_freno_2.grosor_pastilla) +
 	 MAX(estado_freno_3.grosor_pastilla) - MIN(estado_freno_3.grosor_pastilla) +
 	 MAX(estado_freno_4.grosor_pastilla) - MIN(estado_freno_4.grosor_pastilla)
-	 ) / 4
-FROM AJO_DER.medicion
-	JOIN AJO_DER.carrera ON id_carrera = carrera.id
-	JOIN AJO_DER.BI_DIM_tiempo tiempo ON YEAR(carrera.fecha) = tiempo.anio
-		AND AJO_DER.BI_obtener_cuatrimestre(carrera.fecha) = tiempo.cuatrimestre
-
-	JOIN AJO_DER.estado_de_motor ON estado_de_motor.id_medicion = medicion.id
-	JOIN AJO_DER.estado_de_caja_de_cambios ON estado_de_caja_de_cambios.id_medicion = medicion.id
-
-
-	JOIN AJO_DER.freno freno_1 ON freno_1.id_auto = medicion.id_auto 
-		AND freno_1.id_posicion = 1
-	JOIN AJO_DER.estado_freno estado_freno_1 ON estado_freno_1.id_medicion = medicion.id 
-		AND estado_freno_1.id_freno = freno_1.id
-
-	JOIN AJO_DER.freno freno_2 ON freno_2.id_auto = medicion.id_auto 
-		AND freno_2.id_posicion = 2
-	JOIN AJO_DER.estado_freno estado_freno_2 ON estado_freno_2.id_medicion = medicion.id 
-		AND estado_freno_2.id_freno = freno_2.id
-
-	JOIN AJO_DER.freno freno_3 ON freno_3.id_auto = medicion.id_auto 
-		AND freno_3.id_posicion = 3
-	JOIN AJO_DER.estado_freno estado_freno_3 ON estado_freno_3.id_medicion = medicion.id 
-		AND estado_freno_3.id_freno = freno_3.id
-
-	JOIN AJO_DER.freno freno_4 ON freno_4.id_auto = medicion.id_auto  
-		AND freno_4.id_posicion = 4
-	JOIN AJO_DER.estado_freno estado_freno_4 ON estado_freno_4.id_medicion = medicion.id 
-		AND estado_freno_4.id_freno = freno_4.id
-GROUP BY medicion.id_auto, carrera.id_circuito, tiempo.id, medicion.nro_vuelta, id_sector
-
-
-INSERT INTO #BI_medicion_aux_2
-SELECT
-	tiempo.id,
-	medicion.id_auto, 
-	carrera.id_circuito,
-	nro_vuelta,
-	id_sector,
+	 ) / 4,
 
 	(MAX(estado_neumatico_1.profundidad) - MIN(estado_neumatico_1.profundidad) +
 	 MAX(estado_neumatico_2.profundidad) - MIN(estado_neumatico_2.profundidad) +
@@ -525,142 +455,55 @@ FROM AJO_DER.medicion
 	JOIN AJO_DER.carrera ON id_carrera = carrera.id
 	JOIN AJO_DER.BI_DIM_tiempo tiempo ON YEAR(carrera.fecha) = tiempo.anio
 		AND AJO_DER.BI_obtener_cuatrimestre(carrera.fecha) = tiempo.cuatrimestre
-
-
-	JOIN AJO_DER.neumatico neumatico_1 ON neumatico_1.id_auto = medicion.id_auto
-		AND neumatico_1.id_posicion = 1
-	JOIN AJO_DER.estado_neumatico estado_neumatico_1 ON estado_neumatico_1.id_medicion = medicion.id 
-		AND estado_neumatico_1.id_neumatico = neumatico_1.id
-
-	JOIN AJO_DER.neumatico neumatico_2 ON neumatico_2.id_auto = medicion.id_auto 
-		AND neumatico_2.id_posicion = 2
-	JOIN AJO_DER.estado_neumatico estado_neumatico_2 ON estado_neumatico_2.id_medicion = medicion.id 
-		AND estado_neumatico_2.id_neumatico = neumatico_2.id
-
-	JOIN AJO_DER.neumatico neumatico_3 ON neumatico_3.id_auto = medicion.id_auto
-		AND neumatico_3.id_posicion = 3
-	JOIN AJO_DER.estado_neumatico estado_neumatico_3 ON estado_neumatico_3.id_medicion = medicion.id 
-		AND estado_neumatico_3.id_neumatico = neumatico_3.id
-
-	JOIN AJO_DER.neumatico neumatico_4 ON neumatico_4.id_auto = medicion.id_auto
-		AND neumatico_4.id_posicion = 4
-	JOIN AJO_DER.estado_neumatico estado_neumatico_4 ON estado_neumatico_4.id_medicion = medicion.id 
-		AND estado_neumatico_4.id_neumatico = neumatico_4.id
-GROUP BY medicion.id_auto, carrera.id_circuito, tiempo.id, medicion.nro_vuelta, id_sector
-
-
-INSERT INTO #BI_medicion_aux_3
-SELECT
-	tiempo.id,
-	medicion.id_auto, 
-	carrera.id_circuito,
-	nro_vuelta,
-	id_sector,
-
-	MAX(medicion.tiempo_vuelta),
-	MAX(medicion.velocidad),
-	MAX(cant_combustible) - MIN(cant_combustible)
-
-FROM AJO_DER.medicion
-	JOIN AJO_DER.carrera ON id_carrera = carrera.id
-	JOIN AJO_DER.BI_DIM_tiempo tiempo ON YEAR(carrera.fecha) = tiempo.anio
-		AND AJO_DER.BI_obtener_cuatrimestre(carrera.fecha) = tiempo.cuatrimestre
-GROUP BY medicion.id_auto, carrera.id_circuito, tiempo.id, medicion.nro_vuelta, id_sector
-
-
-INSERT INTO #BI_medicion_aux_4
-SELECT DISTINCT
-	tiempo.id,
-	medicion.id_auto, 
-	carrera.id_circuito,
-	medicion.nro_vuelta,
-	medicion.id_sector,
-
-	#BI_medicion_aux.desgaste_promedio_motor_sector,
-	#BI_medicion_aux.desgaste_promedio_caja_sector,
-	#BI_medicion_aux.desgaste_promedio_frenos_sector,
-	#BI_medicion_aux_2.desgaste_promedio_neumaticos_sector,
-
-	#BI_medicion_aux_2.id_tipo_neumatico_1_inicio_sector,
-	#BI_medicion_aux_2.id_tipo_neumatico_2_inicio_sector,
-	#BI_medicion_aux_2.id_tipo_neumatico_3_inicio_sector,
-	#BI_medicion_aux_2.id_tipo_neumatico_4_inicio_sector
-
-FROM AJO_DER.medicion
-	JOIN AJO_DER.carrera ON id_carrera = carrera.id
-	JOIN AJO_DER.BI_DIM_tiempo tiempo ON YEAR(carrera.fecha) = tiempo.anio
-		AND AJO_DER.BI_obtener_cuatrimestre(carrera.fecha) = tiempo.cuatrimestre
-
-	JOIN #BI_medicion_aux ON
-		medicion.id_auto = #BI_medicion_aux.id_auto AND
-		carrera.id_circuito = #BI_medicion_aux.id_circuito AND
-		tiempo.id = #BI_medicion_aux.id_tiempo AND
-		medicion.nro_vuelta = #BI_medicion_aux.nro_vuelta AND
-		medicion.id_sector = #BI_medicion_aux.id_sector
-	JOIN #BI_medicion_aux_2 ON
-		medicion.id_auto = #BI_medicion_aux_2.id_auto AND
-		carrera.id_circuito = #BI_medicion_aux_2.id_circuito AND
-		tiempo.id = #BI_medicion_aux_2.id_tiempo AND
-		medicion.nro_vuelta = #BI_medicion_aux_2.nro_vuelta AND
-		medicion.id_sector = #BI_medicion_aux_2.id_sector
-
-
-INSERT INTO AJO_DER.BI_FACT_medicion
-SELECT DISTINCT
-	tiempo.id,
-	medicion.id_auto,
-	auto.id_piloto,
-	auto.id_escuderia, 
-	carrera.id_circuito,
-	medicion.id_sector,
-	
-	medicion.nro_vuelta,
-
-	#BI_medicion_aux_3.tiempo_vuelta_sector, -- puede dar 0, ya esta contemplado igual
-	#BI_medicion_aux_3.velocidad_maxima_sector,
-	#BI_medicion_aux_3.consumo_combustible_sector,
-
-	#BI_medicion_aux_4.desgaste_promedio_motor_sector,
-	#BI_medicion_aux_4.desgaste_promedio_caja_sector,
-	#BI_medicion_aux_4.desgaste_promedio_frenos_sector,
-	#BI_medicion_aux_4.desgaste_promedio_neumaticos_sector,
-
-	#BI_medicion_aux_4.id_tipo_neumatico_1_inicio_sector,
-	#BI_medicion_aux_4.id_tipo_neumatico_2_inicio_sector,
-	#BI_medicion_aux_4.id_tipo_neumatico_3_inicio_sector,
-	#BI_medicion_aux_4.id_tipo_neumatico_4_inicio_sector
-
-FROM AJO_DER.medicion
-	JOIN AJO_DER.carrera ON id_carrera = carrera.id
-	JOIN AJO_DER.BI_DIM_tiempo tiempo ON YEAR(carrera.fecha) = tiempo.anio
-		AND AJO_DER.BI_obtener_cuatrimestre(carrera.fecha) = tiempo.cuatrimestre
 	JOIN AJO_DER.auto ON id_auto = auto.id
 
-	JOIN #BI_medicion_aux_3 ON
-		medicion.id_auto = #BI_medicion_aux_3.id_auto AND
-		carrera.id_circuito = #BI_medicion_aux_3.id_circuito AND
-		tiempo.id = #BI_medicion_aux_3.id_tiempo AND
-		medicion.nro_vuelta = #BI_medicion_aux_3.nro_vuelta AND
-		medicion.id_sector = #BI_medicion_aux_3.id_sector
-	JOIN #BI_medicion_aux_4 ON
-		medicion.id_auto = #BI_medicion_aux_4.id_auto AND
-		carrera.id_circuito = #BI_medicion_aux_4.id_circuito AND
-		tiempo.id = #BI_medicion_aux_4.id_tiempo AND
-		medicion.nro_vuelta = #BI_medicion_aux_4.nro_vuelta AND
-		medicion.id_sector = #BI_medicion_aux_4.id_sector
+	JOIN AJO_DER.estado_de_motor ON estado_de_motor.id_medicion = medicion.id
+	JOIN AJO_DER.estado_de_caja_de_cambios ON estado_de_caja_de_cambios.id_medicion = medicion.id
 
 
-DROP TABLE #BI_medicion_aux
-GO
-DROP TABLE #BI_medicion_aux_2
-GO
-DROP TABLE #BI_medicion_aux_3
-GO
-DROP TABLE #BI_medicion_aux_4
-GO
+	JOIN AJO_DER.estado_freno estado_freno_1 ON estado_freno_1.id_medicion = medicion.id
+	JOIN AJO_DER.freno freno_1 ON freno_1.id = estado_freno_1.id_freno AND
+				freno_1.id_posicion = 1
+
+	JOIN AJO_DER.estado_freno estado_freno_2 ON estado_freno_2.id_medicion = medicion.id
+	JOIN AJO_DER.freno freno_2 ON freno_2.id = estado_freno_2.id_freno AND
+				freno_2.id_posicion = 2
+
+	JOIN AJO_DER.estado_freno estado_freno_3 ON estado_freno_3.id_medicion = medicion.id
+	JOIN AJO_DER.freno freno_3 ON freno_3.id = estado_freno_3.id_freno AND
+				freno_3.id_posicion = 3
+
+	JOIN AJO_DER.estado_freno estado_freno_4 ON estado_freno_4.id_medicion = medicion.id
+	JOIN AJO_DER.freno freno_4 ON freno_4.id = estado_freno_4.id_freno AND
+				freno_4.id_posicion = 4
+
+
+	JOIN AJO_DER.estado_neumatico estado_neumatico_1 ON estado_neumatico_1.id_medicion = medicion.id
+	JOIN AJO_DER.neumatico neumatico_1 ON neumatico_1.id = estado_neumatico_1.id_neumatico AND
+				neumatico_1.id_posicion = 1
+
+	JOIN AJO_DER.estado_neumatico estado_neumatico_2 ON estado_neumatico_2.id_medicion = medicion.id
+	JOIN AJO_DER.neumatico neumatico_2 ON neumatico_2.id = estado_neumatico_2.id_neumatico AND
+				neumatico_2.id_posicion = 2
+
+	JOIN AJO_DER.estado_neumatico estado_neumatico_3 ON estado_neumatico_3.id_medicion = medicion.id
+	JOIN AJO_DER.neumatico neumatico_3 ON neumatico_3.id = estado_neumatico_3.id_neumatico AND
+				neumatico_3.id_posicion = 3
+
+	JOIN AJO_DER.estado_neumatico estado_neumatico_4 ON estado_neumatico_4.id_medicion = medicion.id
+	JOIN AJO_DER.neumatico neumatico_4 ON neumatico_4.id = estado_neumatico_4.id_neumatico AND
+				neumatico_4.id_posicion = 4
+GROUP BY
+	medicion.id_auto,
+	auto.id_piloto,
+	auto.id_escuderia,
+	carrera.id_circuito,
+	tiempo.id,
+	medicion.nro_vuelta,
+	id_sector
+
 
 -- Carga de datos de parada_box
-
 INSERT INTO AJO_DER.BI_FACT_parada_box
 SELECT 
 	tiempo.id,
@@ -674,7 +517,6 @@ FROM AJO_DER.parada_box
 	JOIN AJO_DER.auto ON parada_box.id_auto = auto.id
 
 -- Carga de datos de incidente_auto
-
 INSERT INTO AJO_DER.BI_FACT_incidente_auto
 SELECT
 	tiempo.id,
@@ -689,7 +531,6 @@ FROM AJO_DER.incidente_auto
 		AND AJO_DER.BI_obtener_cuatrimestre(carrera.fecha) = tiempo.cuatrimestre
 	JOIN AJO_DER.auto ON incidente_auto.id_auto = auto.id
 GO
-
 
 
 -- Desgaste promedio de cada componente de cada auto por vuelta por circuito.
