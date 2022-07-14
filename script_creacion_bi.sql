@@ -32,6 +32,9 @@ IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'BI_DIM_tipo_incidente')
 IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'BI_DIM_sector')
 	DROP TABLE AJO_DER.BI_DIM_sector
 
+IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'BI_DIM_tipo_sector')
+	DROP TABLE AJO_DER.BI_DIM_tipo_sector
+
 IF EXISTS(SELECT name FROM sys.tables WHERE name LIKE 'BI_DIM_tiempo')
 	DROP TABLE AJO_DER.BI_DIM_tiempo
 GO
@@ -116,50 +119,55 @@ GO
 
 -- Creacion de tablas
 CREATE TABLE AJO_DER.BI_DIM_auto (
-	id INT NOT NULL IDENTITY PRIMARY KEY,
+	id INT IDENTITY PRIMARY KEY,
 	modelo NVARCHAR(255),
 	numero_auto INT
 );
 
 CREATE TABLE AJO_DER.BI_DIM_piloto(
-	id INT NOT NULL IDENTITY PRIMARY KEY,
+	id INT IDENTITY PRIMARY KEY,
 	nombre NVARCHAR(50),
 	apellido NVARCHAR(50),
 );
 
 CREATE TABLE AJO_DER.BI_DIM_escuderia(
-	id INT NOT NULL IDENTITY PRIMARY KEY,
+	id INT IDENTITY PRIMARY KEY,
 	nombre NVARCHAR(255),
 );
 
 CREATE TABLE AJO_DER.BI_DIM_circuito(
-	id INT NOT NULL IDENTITY PRIMARY KEY,
+	id INT IDENTITY PRIMARY KEY,
 	nombre NVARCHAR(255),
 );
 
 CREATE TABLE AJO_DER.BI_DIM_tipo_neumatico (
-	id INT NOT NULL IDENTITY PRIMARY KEY,
+	id INT IDENTITY PRIMARY KEY,
 	tipo NVARCHAR(255)
 );
 
 CREATE TABLE AJO_DER.BI_DIM_tipo_incidente (
-	id INT NOT NULL IDENTITY PRIMARY KEY,
+	id INT IDENTITY PRIMARY KEY,
+	tipo NVARCHAR(255)
+);
+
+CREATE TABLE AJO_DER.BI_DIM_tipo_sector (
+	id INT IDENTITY PRIMARY KEY,
 	tipo NVARCHAR(255)
 );
 
 CREATE TABLE AJO_DER.BI_DIM_sector (
-	id INT NOT NULL IDENTITY PRIMARY KEY,
-	tipo NVARCHAR(255)
+	id INT IDENTITY PRIMARY KEY,
+	id_tipo_sector INT REFERENCES AJO_DER.BI_DIM_tipo_sector -- FK
 );
 
 CREATE TABLE AJO_DER.BI_DIM_tiempo(
-	id INT NOT NULL IDENTITY PRIMARY KEY,
+	id INT IDENTITY PRIMARY KEY,
 	anio INT,
 	cuatrimestre INT,
 );
 
 CREATE TABLE AJO_DER.BI_FACT_medicion (
-	id INT NOT NULL IDENTITY PRIMARY KEY,
+	id INT IDENTITY PRIMARY KEY,
 	id_tiempo INT REFERENCES AJO_DER.BI_DIM_tiempo, -- FK
 	id_auto INT REFERENCES AJO_DER.BI_DIM_auto, -- FK
 	id_piloto INT REFERENCES AJO_DER.BI_DIM_piloto, -- FK
@@ -185,7 +193,7 @@ CREATE TABLE AJO_DER.BI_FACT_medicion (
 );
 
 CREATE TABLE AJO_DER.BI_FACT_parada_box (
-	id INT NOT NULL IDENTITY PRIMARY KEY,
+	id INT IDENTITY PRIMARY KEY,
 	id_tiempo INT REFERENCES AJO_DER.BI_DIM_tiempo, -- FK
 	id_circuito INT REFERENCES AJO_DER.BI_DIM_circuito, -- FK
 	id_escuderia INT REFERENCES AJO_DER.BI_DIM_escuderia, -- FK
@@ -193,7 +201,7 @@ CREATE TABLE AJO_DER.BI_FACT_parada_box (
 );
 
 CREATE TABLE AJO_DER.BI_FACT_incidente_auto (
-	id INT NOT NULL IDENTITY PRIMARY KEY,
+	id INT IDENTITY PRIMARY KEY,
 	id_tiempo INT REFERENCES AJO_DER.BI_DIM_tiempo, -- FK
 	id_circuito INT REFERENCES AJO_DER.BI_DIM_circuito, -- FK
 	id_escuderia INT REFERENCES AJO_DER.BI_DIM_escuderia, -- FK
@@ -343,11 +351,15 @@ INSERT INTO AJO_DER.BI_DIM_tipo_incidente
 SELECT tipo
 FROM AJO_DER.tipo_incidente
 
+-- Carga de datos de tipo_sector
+INSERT INTO AJO_DER.BI_DIM_tipo_sector
+SELECT tipo
+FROM AJO_DER.tipo_sector
+
 -- Carga de datos de sector
 INSERT INTO AJO_DER.BI_DIM_sector
-SELECT tipo
-FROM AJO_DER.sector s
-	JOIN AJO_DER.tipo_sector t ON s.id_tipo_sector = t.id 
+SELECT id_tipo_sector
+FROM AJO_DER.sector
 
 -- Carga de datos de tiempo
 INSERT INTO AJO_DER.BI_DIM_tiempo
@@ -368,7 +380,7 @@ SELECT
 	
 	medicion.nro_vuelta,
 
-	MAX(medicion.tiempo_vuelta), -- puede dar 0, ya esta contemplado igual
+	MAX(medicion.tiempo_vuelta),
 	MAX(medicion.velocidad),
 	MAX(cant_combustible) - MIN(cant_combustible),
 
@@ -579,13 +591,14 @@ CREATE VIEW AJO_DER.BI_maxima_velocidad_alcanzada_por_cada_auto AS
 		MAX(medicion.velocidad_maxima_sector) AS 'Maxima Velocidad Alcanzada',
 		auto.modelo AS 'Modelo del Auto',
 		auto.numero_auto AS 'Numero del Auto de su Escuderia',
-		sector.tipo AS 'Tipo Sector',
+		tipo_sector.tipo AS 'Tipo Sector',
 		circuito.nombre AS 'Circuito'
 	FROM AJO_DER.BI_FACT_medicion medicion
 		JOIN AJO_DER.BI_DIM_auto auto ON auto.id = medicion.id_auto
 		JOIN AJO_DER.BI_DIM_sector sector ON sector.id = medicion.id_sector
+		JOIN AJO_DER.BI_DIM_tipo_sector tipo_sector ON tipo_sector.id = sector.id_tipo_sector
 		JOIN AJO_DER.BI_DIM_circuito circuito ON circuito.id = medicion.id_circuito
-	GROUP BY auto.modelo, auto.numero_auto, sector.tipo, circuito.nombre
+	GROUP BY auto.modelo, auto.numero_auto, tipo_sector.tipo, circuito.nombre
 GO
 
 -- Tiempo promedio que tardó cada escudería en las paradas por cuatrimestre
@@ -638,16 +651,17 @@ GO
 -- Promedio de incidentes que presenta cada escudería por año en los distintos tipo de sectores
 CREATE VIEW AJO_DER.BI_promedio_incidentes_escuderia_anio_tipo_de_sector AS
 	SELECT
-		SUM(CASE WHEN sector.tipo = 'Frenada' THEN 1.0 ELSE 0.0 END)
+		SUM(CASE WHEN tipo_sector.tipo = 'Frenada' THEN 1.0 ELSE 0.0 END)
 		AS 'Promedio de incidentes en Frenada',
-		SUM(CASE WHEN sector.tipo = 'Recta' THEN 1.0 ELSE 0.0 END)
+		SUM(CASE WHEN tipo_sector.tipo = 'Recta' THEN 1.0 ELSE 0.0 END)
 		AS 'Promedio de incidentes en Recta',
-		SUM(CASE WHEN sector.tipo = 'Curva' THEN 1.0 ELSE 0.0 END)
+		SUM(CASE WHEN tipo_sector.tipo = 'Curva' THEN 1.0 ELSE 0.0 END)
 		AS 'Promedio de incidentes en Curva',
 		escuderia.nombre AS 'Escuderia',
 		fecha.anio AS 'Año'
 	FROM AJO_DER.BI_FACT_incidente_auto incidente_auto
 		JOIN AJO_DER.BI_DIM_sector sector ON sector.id = incidente_auto.id_sector
+		JOIN AJO_DER.BI_DIM_tipo_sector tipo_sector ON tipo_sector.id = sector.id_tipo_sector
 		JOIN AJO_DER.BI_DIM_escuderia escuderia ON escuderia.id = incidente_auto.id_escuderia
 		JOIN AJO_DER.BI_DIM_tiempo fecha ON fecha.id = incidente_auto.id_tiempo
 	GROUP BY escuderia.nombre, fecha.anio
