@@ -67,24 +67,21 @@ IF OBJECT_ID('AJO_DER.BI_circuitos_mas_peligrosos_del_anio') IS NOT NULL
 
 IF OBJECT_ID('AJO_DER.BI_promedio_incidentes_escuderia_anio_tipo_de_sector') IS NOT NULL
 	DROP VIEW AJO_DER.BI_promedio_incidentes_escuderia_anio_tipo_de_sector
+GO
 
 
 -- Eliminacion de funciones si existen
 IF OBJECT_ID('AJO_DER.BI_obtener_cuatrimestre') IS NOT NULL
 	DROP FUNCTION AJO_DER.BI_obtener_cuatrimestre
 
-IF OBJECT_ID('AJO_DER.BI_obtener_desgaste_promedio_frenos') IS NOT NULL
-	DROP FUNCTION AJO_DER.BI_obtener_desgaste_promedio_frenos
-
-IF OBJECT_ID('AJO_DER.BI_obtener_desgaste_promedio_neumaticos') IS NOT NULL
-	DROP FUNCTION AJO_DER.BI_obtener_desgaste_promedio_neumaticos
+IF OBJECT_ID('AJO_DER.BI_primer_tipo_neumatico') IS NOT NULL
+	DROP FUNCTION AJO_DER.BI_primer_tipo_neumatico
 
 IF OBJECT_ID('AJO_DER.BI_obtener_tiempos_de_vuelta') IS NOT NULL
 	DROP FUNCTION AJO_DER.BI_obtener_tiempos_de_vuelta
 
 IF OBJECT_ID('AJO_DER.BI_obtener_Consumo_x_Auto') IS NOT NULL
 	DROP FUNCTION AJO_DER.BI_obtener_Consumo_x_Auto
-GO
 
 IF OBJECT_ID('AJO_DER.BI_ranking_incidentes_x_Circuito_x_anio') IS NOT NULL
 	DROP FUNCTION AJO_DER.BI_ranking_incidentes_x_Circuito_x_anio
@@ -246,6 +243,28 @@ CREATE FUNCTION AJO_DER.BI_obtener_cuatrimestre(@fecha DATE)
 	END
 GO
 
+CREATE FUNCTION AJO_DER.BI_primer_tipo_neumatico(@posicion INT, @auto INT, @circuito INT, @nro_vuelta DECIMAL(18,0), @sector INT)
+	RETURNS INT
+	AS
+	BEGIN
+		RETURN
+		( 
+			SELECT TOP 1 n.id_tipo_neumatico
+			FROM AJO_DER.medicion m
+				JOIN AJO_DER.carrera c ON c.id = m.id_carrera
+				JOIN AJO_DER.estado_neumatico e ON e.id_medicion = m.id
+				JOIN AJO_DER.neumatico n ON n.id = e.id_neumatico AND 
+					n.id_posicion = @posicion
+			WHERE
+				m.id_auto = @auto AND
+				c.id_circuito = @circuito AND
+				m.nro_vuelta = @nro_vuelta AND
+				m.id_sector = @sector
+			ORDER BY m.distancia_vuelta
+		)
+	END
+GO
+
 CREATE FUNCTION AJO_DER.BI_obtener_tiempos_de_vuelta()
 	RETURNS @Result TABLE (
 		tiempo_vuelta DECIMAL(18,10), 
@@ -399,68 +418,21 @@ SELECT
 	 ) / 4,
 
 	CASE WHEN COUNT(DISTINCT neumatico_1.id_tipo_neumatico) > 1 THEN
-	(
-		SELECT TOP 1 n1.id_tipo_neumatico
-		FROM AJO_DER.medicion m1
-			JOIN AJO_DER.carrera carrera1 ON carrera1.id = m1.id_carrera
-			JOIN AJO_DER.estado_neumatico e1 ON e1.id_medicion = m1.id
-			JOIN AJO_DER.neumatico n1 ON n1.id = e1.id_neumatico AND 
-				n1.id_posicion = 1
-		where
-			m1.id_auto = medicion.id_auto AND
-			carrera1.id_circuito = carrera.id_circuito AND
-			m1.nro_vuelta = medicion.nro_vuelta AND
-			m1.id_sector = medicion.id_sector
-		ORDER BY m1.distancia_vuelta
-	) 
+	AJO_DER.BI_primer_tipo_neumatico(1, medicion.id_auto, carrera.id_circuito, medicion.nro_vuelta, medicion.id_sector)
 	ELSE MIN(neumatico_1.id_tipo_neumatico) END,
+	-- como es solo 1, el MIN() siempre devuelve el correcto
+	-- esto es para evitar agrupar por este campo "neumatico_x.id_tipo_neumatico"
+
 	CASE WHEN COUNT(DISTINCT neumatico_2.id_tipo_neumatico) > 1 THEN
-	(
-		SELECT TOP 1 n1.id_tipo_neumatico
-		FROM AJO_DER.medicion m1
-			JOIN AJO_DER.carrera carrera1 ON carrera1.id = m1.id_carrera
-			JOIN AJO_DER.estado_neumatico e1 ON e1.id_medicion = m1.id
-			JOIN AJO_DER.neumatico n1 ON n1.id = e1.id_neumatico AND 
-				n1.id_posicion = 1
-		where
-			m1.id_auto = medicion.id_auto AND
-			carrera1.id_circuito = carrera.id_circuito AND
-			m1.nro_vuelta = medicion.nro_vuelta AND
-			m1.id_sector = medicion.id_sector
-		ORDER BY m1.distancia_vuelta
-	) 
+	AJO_DER.BI_primer_tipo_neumatico(2, medicion.id_auto, carrera.id_circuito, medicion.nro_vuelta, medicion.id_sector)
 	ELSE MIN(neumatico_2.id_tipo_neumatico) END,
+
 	CASE WHEN COUNT(DISTINCT neumatico_3.id_tipo_neumatico) > 1 THEN
-	(
-		SELECT TOP 1 n1.id_tipo_neumatico
-		FROM AJO_DER.medicion m1
-			JOIN AJO_DER.carrera carrera1 ON carrera1.id = m1.id_carrera
-			JOIN AJO_DER.estado_neumatico e1 ON e1.id_medicion = m1.id
-			JOIN AJO_DER.neumatico n1 ON n1.id = e1.id_neumatico AND 
-				n1.id_posicion = 1
-		where
-			m1.id_auto = medicion.id_auto AND
-			carrera1.id_circuito = carrera.id_circuito AND
-			m1.nro_vuelta = medicion.nro_vuelta AND
-			m1.id_sector = medicion.id_sector
-		ORDER BY m1.distancia_vuelta
-	) 
+	AJO_DER.BI_primer_tipo_neumatico(3, medicion.id_auto, carrera.id_circuito, medicion.nro_vuelta, medicion.id_sector) 
 	ELSE MIN(neumatico_3.id_tipo_neumatico) END,
+
 	CASE WHEN COUNT(DISTINCT neumatico_4.id_tipo_neumatico) > 1 THEN
-	(
-		SELECT TOP 1 n1.id_tipo_neumatico
-		FROM AJO_DER.medicion m1
-			JOIN AJO_DER.carrera carrera1 ON carrera1.id = m1.id_carrera
-			JOIN AJO_DER.estado_neumatico e1 ON e1.id_medicion = m1.id
-			JOIN AJO_DER.neumatico n1 ON n1.id = e1.id_neumatico AND 
-				n1.id_posicion = 1
-		where
-			m1.id_auto = medicion.id_auto AND
-			carrera1.id_circuito = carrera.id_circuito AND
-			m1.nro_vuelta = medicion.nro_vuelta AND
-			m1.id_sector = medicion.id_sector
-		ORDER BY m1.distancia_vuelta
-	) 
+	AJO_DER.BI_primer_tipo_neumatico(4, medicion.id_auto, carrera.id_circuito, medicion.nro_vuelta, medicion.id_sector)
 	ELSE MIN(neumatico_4.id_tipo_neumatico) END
 
 FROM AJO_DER.medicion
